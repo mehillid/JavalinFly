@@ -23,9 +23,9 @@ import java.io.Writer;
 public class JavalinFlyProcessor extends AbstractProcessor {
 
     public static String SIMPLE_CLASS_NAME = "GeneratedClass";
-    public static String PACKAGE_NAME  = JavalinFlyProcessor.class.getName() ;
+    public static String PACKAGE_NAME  = JavalinFlyProcessor.class.getPackageName();
     public static String FULL_CLASS = PACKAGE_NAME + "." + SIMPLE_CLASS_NAME;
-
+    public static String METHOD_NAME = "hello";
 
     private Types typeUtils;
     private Elements elementUtils;
@@ -77,8 +77,8 @@ public class JavalinFlyProcessor extends AbstractProcessor {
         if(controllers.size() > 0) {
 //        String packageName = elementUtils.getPackageOf(annotatedElement).getQualifiedName().toString();
 
-//            generateClass(controllers.iterator().next());
-            error(controllers.iterator().next(), "Error generating class %s: Testing stuff", FULL_CLASS);
+            generateClass(controllers.iterator().next());
+//            error(controllers.iterator().next(), "Error generating class %s: Testing stuff", FULL_CLASS);
 
             return true;
         }
@@ -99,17 +99,19 @@ public class JavalinFlyProcessor extends AbstractProcessor {
     private void generateClass(Element element) {
         String source = "package " + PACKAGE_NAME + ";\n\n" +
                 "public class " + SIMPLE_CLASS_NAME + " {\n" +
-                "    public " + PACKAGE_NAME + "(){}\n" +
-                "    public void hello() {\n" +
+                "    public " + SIMPLE_CLASS_NAME + "(){}\n" +
+                "    public void " + METHOD_NAME + "() {\n" +
                 "        System.out.println(\"Hello from \" + getClass().getSimpleName());\n" +
                 "    }\n" +
                 "}\n";
 
+//        print(source);
         try {
             JavaFileObject sourceFile = filer.createSourceFile(FULL_CLASS, element);
             try (Writer writer = sourceFile.openWriter()) {
                 writer.write(source);
             }
+
         } catch (IOException e) {
             error(element, "Error generating class %s: %s", FULL_CLASS, e.getMessage());
         }
