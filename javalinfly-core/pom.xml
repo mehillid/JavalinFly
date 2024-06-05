@@ -19,31 +19,6 @@
   <build>
     <plugins>
       <!-- Compile the project-->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>process-test-annotations</id>
-            <phase>generate-test-resources</phase>
-            <goals>
-              <goal>testCompile</goal>
-            </goals>
-            <configuration>
-              <annotationProcessorPaths>
-                <annotationProcessorPath>
-                  <groupId>${groupId}</groupId>
-                  <artifactId>${artifactId}</artifactId>
-                  <version>${version}</version>
-                </annotationProcessorPath>
-              </annotationProcessorPaths>
-              <annotationProcessors>
-                <annotationProcessor>com.github.unldenis.javalinfly.processor.JavalinFlyProcessor</annotationProcessor>
-              </annotationProcessors>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
 
     </plugins>
   </build>
