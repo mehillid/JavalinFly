@@ -2,6 +2,7 @@ package com.github.unldenis.javalinfly.processor;
 
 import com.github.unldenis.javalinfly.Controller;
 import com.github.unldenis.javalinfly.JavalinFly;
+import com.google.auto.service.AutoService;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -16,6 +17,9 @@ import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
 
+@SupportedAnnotationTypes("com.github.unldenis.javalinfly.Controller")
+@SupportedSourceVersion(SourceVersion.RELEASE_11)
+@AutoService(Processor.class)
 public class JavalinFlyProcessor extends AbstractProcessor {
 
     public static String SIMPLE_CLASS_NAME = "GeneratedClass";
@@ -42,6 +46,7 @@ public class JavalinFlyProcessor extends AbstractProcessor {
         // Nome della nuova classe e pacchetto (modificare secondo necessità)
 
 
+        print("Hello from annotation :)");
         Set<? extends Element> controllers =  roundEnv.getElementsAnnotatedWith(Controller.class);
 
         // Iterate over all @Controller annotated elements
@@ -72,28 +77,23 @@ public class JavalinFlyProcessor extends AbstractProcessor {
         if(controllers.size() > 0) {
 //        String packageName = elementUtils.getPackageOf(annotatedElement).getQualifiedName().toString();
 
-            generateClass(controllers.iterator().next());
+//            generateClass(controllers.iterator().next());
+            error(controllers.iterator().next(), "Error generating class %s: Testing stuff", FULL_CLASS);
 
+            return true;
         }
 
 
-        return true;
+        return false;
     }
 
-    @Override
-    public Set<String> getSupportedAnnotationTypes() {
-        Set<String> annotations = new LinkedHashSet<>();
-        annotations.add(Controller.class.getName());
-        return annotations;
-    }
-
-    @Override
-    public SourceVersion getSupportedSourceVersion() {
-        return SourceVersion.latestSupported();
-    }
 
     private void error(Element e, String msg, Object... args) {
         messager.printMessage(Diagnostic.Kind.ERROR, String.format(msg, args), e);
+    }
+
+    private void print(String msg, Object... args) {
+        messager.printMessage(Diagnostic.Kind.NOTE, String.format(msg, args));
     }
 
     private void generateClass(Element element) {

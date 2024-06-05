@@ -9,8 +9,8 @@
   <version>1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <modules>
-    <module>javalinfly-example</module>
     <module>javalinfly-core</module>
+    <module>javalinfly-example</module>
   </modules>
 
   <properties>

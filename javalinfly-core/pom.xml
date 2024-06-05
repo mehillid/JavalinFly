@@ -15,14 +15,19 @@
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <auto-service.version>1.0-rc2</auto-service.version>
   </properties>
-  <build>
-    <plugins>
-      <!-- Compile the project-->
 
-    </plugins>
-  </build>
+
   <dependencies>
-
+    <dependency>
+      <groupId>com.google.auto.service</groupId>
+      <artifactId>auto-service</artifactId>
+      <version>${auto-service.version}</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
+
+
+
 </project>
