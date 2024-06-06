@@ -104,19 +104,19 @@ public class JavalinFlyProcessor extends AbstractProcessor {
                 Delete delete = executableElement.getAnnotation(Delete.class);
 
                 String handlerType = null;
-                ResponseType responseType = null;
+                String responseType = null;
                 if (get != null) {
                     handlerType = "GET";
-                    responseType = get.responseType();
+                    responseType = get.responseType().compiled();
                 } else if (post != null) {
                     handlerType = "POST";
-                    responseType = post.responseType();
+                    responseType = post.responseType().compiled();
                 } else if (put != null) {
                     handlerType = "PUT";
-                    responseType = put.responseType();
+                    responseType = put.responseType().compiled();
                 } else if (delete != null) {
                     handlerType = "DELETE";
-                    responseType = delete.responseType();
+                    responseType = delete.responseType().compiled();
                 } else {
                     return true;
                 }
@@ -130,18 +130,11 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 
                 endpoints.add(
                         "config.app.addEndpoint(new Endpoint(HandlerType." + handlerType + ",\"" + controller.path() + "\", config.roles.values().toArray(RouteRole[]::new), ctx -> {\n" +
-                                String.format("%s.%s(ctx);\n", varDecl, executableElement.getSimpleName()) +
+                                String.format("var response = %s.%s(ctx);\n", varDecl, executableElement.getSimpleName()) +
+                                responseType + "\n" +
                         "\n}));"
                 );
-//                Javalin app = null;
-//
-//
-//                app.addEndpoint(new Endpoint(HandlerType.GET, "/hello", new Roles()  ctx -> {
-//
-//
-//                }) {});
 
-                // logic
             }
         }
 

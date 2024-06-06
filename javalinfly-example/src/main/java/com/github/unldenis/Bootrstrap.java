@@ -21,6 +21,8 @@ public class Bootrstrap {
         Javalin app = Javalin.create(/*config*/)
                 .get("/", ctx -> ctx.result("Hello World"))
                 .start(7070);
+
+
         JavalinFlyConfig config = new JavalinFlyConfig(app);
         config.roles = Map.of("guest", MyRoles.GUEST, "user", MyRoles.USER, "admin", MyRoles.ADMIN);
         JavalinFly.inject(() -> config);
