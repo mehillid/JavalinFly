@@ -15,7 +15,7 @@ import java.util.List;
 //    }
 
     @Post()
-    public Response<List<Integer>, StandardError> createAll(Context ctx, @Body List<Integer> users) {
+    public Response<Users, StandardError> createAll(Context ctx, @Body Users users) {
         return Response.ok(users);
     }
 
@@ -24,9 +24,21 @@ import java.util.List;
         return Response.ok("user joe, age 26");
     }
 
+    public static class Users {
+        public List<User> users;
+
+
+        public Users() {}
+        public Users(List<User> users) {
+            this.users = users;
+        }
+    }
+
     public static class User {
         public String name;
         public int age;
+
+        public User() {}
 
         public User(String name, int age) {
             this.name = name;
