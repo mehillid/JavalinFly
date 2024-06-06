@@ -20,8 +20,8 @@ import java.util.List;
     }
 
     @Get(responseType = ResponseType.STRING)
-    public Response<String, String> getUser(Context ctx) {
-        return Response.ok("user joe, age 26");
+    public Response<String, String> getUser(Context ctx, @Path String id, @Query String age) {
+        return Response.ok(String.format("id %s, age %s", id, age));
     }
 
     public static class Users {

@@ -124,12 +124,18 @@ public class JavalinFlyProcessor extends AbstractProcessor {
                     return true;
                 }
 
+
+                // ** logic
+
+                StringBuilder endpointPath = new StringBuilder(controller.path());
+
+
                 List<String> parametersCall = new ArrayList<>();
                 parametersCall.add("ctx");
                 List<String> parametersDecl = new ArrayList<>();
                 for(VariableElement variableElement : executableElement.getParameters()) {
 
-                    String nameParameter = "arg" + (parametersDecl.size()+1);
+                    String nameParameter = variableElement.getSimpleName().toString();
                     String typeParameter = variableElement.asType().toString();
                     String classParameter = typeParameter.split("<")[0];
 
@@ -141,11 +147,28 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 
                         parametersDecl.add(String.format("%s %s = (%s) ctx.bodyAsClass(%s.class);\n", typeParameter, nameParameter, typeParameter, classParameter));
                     }
+
+                    Path path = variableElement.getAnnotation(Path.class);
+                    if(path != null) {
+
+                        endpointPath.append("/{").append(nameParameter).append("}");
+                        parametersCall.add(nameParameter);
+
+                        parametersDecl.add(String.format("String %s = ctx.pathParam(\"%s\");\n", nameParameter, nameParameter));
+                    }
+
+                    Query query = variableElement.getAnnotation(Query.class);
+                    if(query != null) {
+
+                        parametersCall.add(nameParameter);
+
+                        parametersDecl.add(String.format("String %s = ctx.queryParam(\"%s\");\n", nameParameter, nameParameter));
+                    }
                 }
 
 
                 endpoints.add(
-                        "config.app.addEndpoint(new Endpoint(HandlerType." + handlerType + ",\"" + controller.path() + "\", config.roles.values().toArray(RouteRole[]::new), ctx -> {\n" +
+                        "config.app.addEndpoint(new Endpoint(HandlerType." + handlerType + ",\"" + endpointPath.toString() + "\", config.roles.values().toArray(RouteRole[]::new), ctx -> {\n" +
                                 String.join("", parametersDecl) +
                                 String.format("var response = %s.%s(%s);\n", varDecl, executableElement.getSimpleName(), String.join(",", parametersCall)) +
                                 responseType + "\n" +
