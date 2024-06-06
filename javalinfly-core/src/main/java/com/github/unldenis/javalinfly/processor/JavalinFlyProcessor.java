@@ -46,6 +46,7 @@ public class JavalinFlyProcessor extends AbstractProcessor {
         // Nome della nuova classe e pacchetto (modificare secondo necessità)
 
 
+
         print("Hello from annotation :)");
         Set<? extends Element> controllers =  roundEnv.getElementsAnnotatedWith(Controller.class);
 
@@ -77,8 +78,11 @@ public class JavalinFlyProcessor extends AbstractProcessor {
         if(controllers.size() > 0) {
 //        String packageName = elementUtils.getPackageOf(annotatedElement).getQualifiedName().toString();
 
-            generateClass(controllers.iterator().next());
+            Element controllerElement = controllers.iterator().next();
+
+            generateClass(controllerElement);
 //            error(controllers.iterator().next(), "Error generating class %s: Testing stuff", FULL_CLASS);
+//            error(e, "errore: classe %s non ha l'annotazione niagara 4", e.getSimpleName().toString());
 
             return true;
         }
@@ -90,6 +94,10 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 
     private void error(Element e, String msg, Object... args) {
         messager.printMessage(Diagnostic.Kind.ERROR, String.format(msg, args), e);
+    }
+
+    private void error(String msg, Object... args) {
+        messager.printMessage(Diagnostic.Kind.ERROR, String.format(msg, args));
     }
 
     private void print(String msg, Object... args) {
