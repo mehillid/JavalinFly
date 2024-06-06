@@ -18,10 +18,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
@@ -127,10 +124,30 @@ public class JavalinFlyProcessor extends AbstractProcessor {
                     return true;
                 }
 
+                List<String> parametersCall = new ArrayList<>();
+                parametersCall.add("ctx");
+                List<String> parametersDecl = new ArrayList<>();
+                for(VariableElement variableElement : executableElement.getParameters()) {
+
+                    String nameParameter = "arg" + (parametersDecl.size()+1);
+                    String typeParameter = variableElement.asType().toString();
+                    String classParameter = typeParameter.split("<")[0];
+
+
+                    Body body = variableElement.getAnnotation(Body.class);
+                    if(body != null) {
+
+                        parametersCall.add(nameParameter);
+
+                        parametersDecl.add(String.format("%s %s = (%s) ctx.bodyAsClass(%s.class);\n", typeParameter, nameParameter, typeParameter, classParameter));
+                    }
+                }
+
 
                 endpoints.add(
                         "config.app.addEndpoint(new Endpoint(HandlerType." + handlerType + ",\"" + controller.path() + "\", config.roles.values().toArray(RouteRole[]::new), ctx -> {\n" +
-                                String.format("var response = %s.%s(ctx);\n", varDecl, executableElement.getSimpleName()) +
+                                String.join("", parametersDecl) +
+                                String.format("var response = %s.%s(%s);\n", varDecl, executableElement.getSimpleName(), String.join(",", parametersCall)) +
                                 responseType + "\n" +
                         "\n}));"
                 );

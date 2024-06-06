@@ -6,13 +6,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.TYPE)
+@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.CLASS)
 
-public @interface Controller {
-
-  String path();
-
-  boolean includeApi() default true;
+public @interface Body {
 
 }
