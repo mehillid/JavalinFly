@@ -36,7 +36,7 @@ public class Response<T, E> {
   }
 
 
-  public @Nullable E unwrapErr() {
+  public @Nullable Object unwrapErr() {
     return error;
   }
 }

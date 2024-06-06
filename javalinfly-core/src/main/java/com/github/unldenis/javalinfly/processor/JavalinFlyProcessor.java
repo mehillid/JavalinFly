@@ -1,15 +1,24 @@
 package com.github.unldenis.javalinfly.processor;
 
-import com.github.unldenis.javalinfly.Controller;
-import com.github.unldenis.javalinfly.JavalinFly;
+import com.github.unldenis.javalinfly.*;
 import com.google.auto.service.AutoService;
+import io.javalin.Javalin;
+import io.javalin.http.HandlerType;
+import io.javalin.router.Endpoint;
+import io.javalin.router.EndpointMetadata;
+import io.javalin.security.Roles;
+import io.javalin.security.RouteRole;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,7 +32,7 @@ import java.io.Writer;
 public class JavalinFlyProcessor extends AbstractProcessor {
 
     public static String SIMPLE_CLASS_NAME = "GeneratedClass";
-    public static String PACKAGE_NAME  = JavalinFlyProcessor.class.getPackageName();
+    public static String PACKAGE_NAME = JavalinFlyProcessor.class.getPackageName();
     public static String FULL_CLASS = PACKAGE_NAME + "." + SIMPLE_CLASS_NAME;
     public static String METHOD_NAME = "hello";
 
@@ -31,6 +40,12 @@ public class JavalinFlyProcessor extends AbstractProcessor {
     private Elements elementUtils;
     private Filer filer;
     private Messager messager;
+
+
+    public Set<String> imports = new HashSet<>();
+    public Set<String> handlersField = new HashSet<>();
+    public Set<String> handlersInit = new HashSet<>();
+    public Set<String> endpoints = new HashSet<>();
 
     @Override
     public synchronized void init(ProcessingEnvironment env) {
@@ -46,17 +61,29 @@ public class JavalinFlyProcessor extends AbstractProcessor {
         // Nome della nuova classe e pacchetto (modificare secondo necessità)
 
 
-
         print("Hello from annotation :)");
-        Set<? extends Element> controllers =  roundEnv.getElementsAnnotatedWith(Controller.class);
+        Set<? extends Element> controllers = roundEnv.getElementsAnnotatedWith(Controller.class);
 
         // Iterate over all @Controller annotated elements
-        for (Element annotatedElement : controllers) {
-
+        for (Element elementController : controllers) {
 
             // Check if a class has been annotated with @Controller
-            if (annotatedElement.getKind() != ElementKind.CLASS) {
-                error(annotatedElement, "Only classes can be annotated with @%s", Controller.class.getSimpleName());
+            if (elementController.getKind() != ElementKind.CLASS) {
+                error(elementController, "Only classes can be annotated with @%s", Controller.class.getSimpleName());
+                return true;
+            }
+
+
+            TypeElement annotatedElement = (TypeElement) elementController;
+
+
+
+            Controller controller = annotatedElement.getAnnotation(Controller.class);
+
+
+            String varDecl = registerConstructors(annotatedElement);
+            if(varDecl == null) {
+                error(annotatedElement, "Class %s missing an empty constructor", annotatedElement.getQualifiedName());
                 return true;
             }
 
@@ -70,12 +97,56 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 
                 ExecutableElement executableElement = (ExecutableElement) enclosedElement;
 
+
+                Get get = executableElement.getAnnotation(Get.class);
+                Post post = executableElement.getAnnotation(Post.class);
+                Put put = executableElement.getAnnotation(Put.class);
+                Delete delete = executableElement.getAnnotation(Delete.class);
+
+                String handlerType = null;
+                ResponseType responseType = null;
+                if (get != null) {
+                    handlerType = "GET";
+                    responseType = get.responseType();
+                } else if (post != null) {
+                    handlerType = "POST";
+                    responseType = post.responseType();
+                } else if (put != null) {
+                    handlerType = "PUT";
+                    responseType = put.responseType();
+                } else if (delete != null) {
+                    handlerType = "DELETE";
+                    responseType = delete.responseType();
+                } else {
+                    return true;
+                }
+
+                String returnType = executableElement.getReturnType().toString();
+                if (executableElement.getReturnType().getKind() != TypeKind.DECLARED || !returnType.startsWith(Response.class.getName())) {
+                    error(executableElement, "Endpoint method must return a Response");
+                    return true;
+                }
+
+
+                endpoints.add(
+                        "config.app.addEndpoint(new Endpoint(HandlerType." + handlerType + ",\"" + controller.path() + "\", config.roles.values().toArray(RouteRole[]::new), ctx -> {\n" +
+                                String.format("%s.%s(ctx);\n", varDecl, executableElement.getSimpleName()) +
+                        "\n}));"
+                );
+//                Javalin app = null;
+//
+//
+//                app.addEndpoint(new Endpoint(HandlerType.GET, "/hello", new Roles()  ctx -> {
+//
+//
+//                }) {});
+
                 // logic
             }
         }
 
 
-        if(controllers.size() > 0) {
+        if (controllers.size() > 0) {
 //        String packageName = elementUtils.getPackageOf(annotatedElement).getQualifiedName().toString();
 
             Element controllerElement = controllers.iterator().next();
@@ -84,13 +155,35 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 //            error(controllers.iterator().next(), "Error generating class %s: Testing stuff", FULL_CLASS);
 //            error(e, "errore: classe %s non ha l'annotazione niagara 4", e.getSimpleName().toString());
 
-            return true;
+//            return true;
         }
 
 
         return false;
     }
 
+    private @Nullable String registerConstructors(@NotNull TypeElement classTree) {
+        for (var member : classTree.getEnclosedElements()) {
+            if (!(member instanceof ExecutableElement)) {
+                continue;
+            }
+            ExecutableElement executableElement = (ExecutableElement) member;
+
+            if (!executableElement.getModifiers().contains(Modifier.PUBLIC) || executableElement.getKind() != ElementKind.CONSTRUCTOR) {
+                continue;
+            }
+
+            if (executableElement.getParameters().isEmpty()) {
+                String className = classTree.getQualifiedName().toString();
+                String varDecl = ProcessorUtil.notCapitalize(className.replace(".", ""));
+                this.handlersField.add(String.format("private %s %s = new %s();\n", className, varDecl, className));
+                return varDecl;
+            }
+
+        }
+
+        return null;
+    }
 
     private void error(Element e, String msg, Object... args) {
         messager.printMessage(Diagnostic.Kind.ERROR, String.format(msg, args), e);
@@ -106,10 +199,25 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 
     private void generateClass(Element element) {
         String source = "package " + PACKAGE_NAME + ";\n\n" +
+                "import java.util.function.Supplier;\n" +
+                "import java.util.HashSet;\n" +
+
+                "import com.github.unldenis.javalinfly.processor.JavalinFlyConfig;\n" +
+
+                "import io.javalin.security.Roles;\n" +
+                "import io.javalin.http.HandlerType;\n" +
+                "import io.javalin.router.Endpoint;\n" +
+                "import io.javalin.http.Context;\n" +
+                "import io.javalin.http.Handler;\n" +
+                "import io.javalin.security.RouteRole;\n" +
+
                 "public class " + SIMPLE_CLASS_NAME + " {\n" +
                 "    public " + SIMPLE_CLASS_NAME + "(){}\n" +
-                "    public void " + METHOD_NAME + "() {\n" +
-                "        System.out.println(\"Hello from \" + getClass().getSimpleName());\n" +
+                String.join("", handlersField) +
+                "    public void " + METHOD_NAME + "(Supplier<JavalinFlyConfig> configFun) {\n" +
+                "        JavalinFlyConfig config = configFun.get();\n" +
+                "        System.out.println(\"Hello from \" + config.roles);\n" +
+                String.join("", endpoints) +
                 "    }\n" +
                 "}\n";
 

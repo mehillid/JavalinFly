@@ -23,6 +23,11 @@
             <artifactId>javalinfly-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.javalin</groupId>
+            <artifactId>javalin</artifactId>
+            <version>6.1.6</version>
+        </dependency>
     </dependencies>
 
 
