@@ -1,11 +1,13 @@
 package com.github.unldenis;
 
 import com.github.unldenis.javalinfly.JavalinFly;
+import com.github.unldenis.javalinfly.JavalinFlyInjector;
 import io.javalin.Javalin;
 import io.javalin.security.RouteRole;
 
 import java.util.Map;
 
+@JavalinFlyInjector(roles = {"guest", "user", "admin"})
 public class Bootstrap {
 
     public enum MyRoles implements RouteRole {

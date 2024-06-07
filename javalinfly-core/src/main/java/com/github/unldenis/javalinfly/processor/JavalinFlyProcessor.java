@@ -22,8 +22,9 @@ import java.util.*;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.stream.Collectors;
 
-@SupportedAnnotationTypes("com.github.unldenis.javalinfly.Controller")
+@SupportedAnnotationTypes({"com.github.unldenis.javalinfly.JavalinFlyInjector", "com.github.unldenis.javalinfly.Controller"})
 @SupportedSourceVersion(SourceVersion.RELEASE_11)
 @AutoService(Processor.class)
 public class JavalinFlyProcessor extends AbstractProcessor {
@@ -38,11 +39,11 @@ public class JavalinFlyProcessor extends AbstractProcessor {
     private Filer filer;
     private Messager messager;
 
-
-    public Set<String> imports = new HashSet<>();
     public Set<String> handlersField = new HashSet<>();
-    public Set<String> handlersInit = new HashSet<>();
     public Set<String> endpoints = new HashSet<>();
+
+    Set<String> injectorRoles;
+    Map<String, ExecutableElement> selectedRoles = new HashMap<>();
 
     @Override
     public synchronized void init(ProcessingEnvironment env) {
@@ -55,10 +56,35 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        // Nome della nuova classe e pacchetto (modificare secondo necessità)
+//        if (roundEnv.processingOver()) {
+//            return true;
+//        }
+        // check injector
+        Set<? extends Element> injectors = roundEnv.getElementsAnnotatedWith(JavalinFlyInjector.class);
+        if(!injectors.isEmpty())
+        {
+
+            if(injectors.size() > 1) {
+                error("More than a class annotated with @%s", JavalinFlyInjector.class.getSimpleName());
+                return true;
+            }
+
+            Element injectorElement = injectors.iterator().next();
 
 
-        print("Hello from annotation :)");
+            // Check if a class has been annotated with @JavalinFlyInjector
+            if (injectorElement.getKind() != ElementKind.CLASS) {
+                error(injectorElement, "Only classes can be annotated with @%s", JavalinFlyInjector.class.getSimpleName());
+                return true;
+            }
+
+
+            TypeElement annotatedElement = (TypeElement) injectorElement;
+            JavalinFlyInjector injector = annotatedElement.getAnnotation(JavalinFlyInjector.class);
+            injectorRoles = Arrays.stream(injector.roles()).collect(Collectors.toSet());
+        }
+
+
         Set<? extends Element> controllers = roundEnv.getElementsAnnotatedWith(Controller.class);
 
         // Iterate over all @Controller annotated elements
@@ -74,12 +100,11 @@ public class JavalinFlyProcessor extends AbstractProcessor {
             TypeElement annotatedElement = (TypeElement) elementController;
 
 
-
             Controller controller = annotatedElement.getAnnotation(Controller.class);
 
 
             String varDecl = registerConstructors(annotatedElement);
-            if(varDecl == null) {
+            if (varDecl == null) {
                 error(annotatedElement, "Class %s missing an empty constructor", annotatedElement.getQualifiedName());
                 return true;
             }
@@ -102,18 +127,23 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 
                 String handlerType = null;
                 String responseType = null;
+                String[] handlerRoles;
                 if (get != null) {
                     handlerType = "GET";
                     responseType = get.responseType().compiled();
+                    handlerRoles = get.roles();
                 } else if (post != null) {
                     handlerType = "POST";
                     responseType = post.responseType().compiled();
+                    handlerRoles = post.roles();
                 } else if (put != null) {
                     handlerType = "PUT";
                     responseType = put.responseType().compiled();
+                    handlerRoles = put.roles();
                 } else if (delete != null) {
                     handlerType = "DELETE";
                     responseType = delete.responseType().compiled();
+                    handlerRoles = delete.roles();
                 } else {
                     return true;
                 }
@@ -122,6 +152,17 @@ public class JavalinFlyProcessor extends AbstractProcessor {
                 if (executableElement.getReturnType().getKind() != TypeKind.DECLARED || !returnType.startsWith(Response.class.getName())) {
                     error(executableElement, "Endpoint method must return a Response");
                     return true;
+                }
+
+                String rolesStr = "";
+                if (handlerRoles.length > 0) {
+                    for(String role : handlerRoles) {
+                        selectedRoles.put(role, executableElement);
+                    }
+
+                    rolesStr = "new RouteRole[]{";
+                    rolesStr += String.join(",", Arrays.stream(handlerRoles).map(roleName -> "config.roles.get(\"" + roleName + "\")").collect(Collectors.toSet()));
+                    rolesStr += "},";
                 }
 
 
@@ -133,7 +174,7 @@ public class JavalinFlyProcessor extends AbstractProcessor {
                 List<String> parametersCall = new ArrayList<>();
                 parametersCall.add("ctx");
                 List<String> parametersDecl = new ArrayList<>();
-                for(VariableElement variableElement : executableElement.getParameters()) {
+                for (VariableElement variableElement : executableElement.getParameters()) {
 
                     String nameParameter = variableElement.getSimpleName().toString();
                     String typeParameter = variableElement.asType().toString();
@@ -141,12 +182,12 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 
 
                     Body body = variableElement.getAnnotation(Body.class);
-                    if(body != null) {
+                    if (body != null) {
 
                         parametersCall.add(nameParameter);
 
-                        if(body.customType()) {
-                            if(!typeParameter.equals(String.class.getName())) {
+                        if (body.customType()) {
+                            if (!typeParameter.equals(String.class.getName())) {
                                 error(variableElement, "Body parameter '%s' must be a String since is customType", nameParameter);
                                 return true;
                             }
@@ -157,7 +198,7 @@ public class JavalinFlyProcessor extends AbstractProcessor {
                     }
 
                     Path path = variableElement.getAnnotation(Path.class);
-                    if(path != null) {
+                    if (path != null) {
 
                         endpointPath.append("/{").append(nameParameter).append("}");
                         parametersCall.add(nameParameter);
@@ -166,7 +207,7 @@ public class JavalinFlyProcessor extends AbstractProcessor {
                     }
 
                     Query query = variableElement.getAnnotation(Query.class);
-                    if(query != null) {
+                    if (query != null) {
 
                         parametersCall.add(nameParameter);
 
@@ -176,22 +217,33 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 
 
                 endpoints.add(
-                        "javalin.addEndpoint(new Endpoint(HandlerType." + handlerType + ",config.pathPrefix + \""  + endpointPath.toString() + "\", config.roles.values().toArray(RouteRole[]::new), ctx -> {\n" +
+                        "javalin.addEndpoint(new Endpoint(HandlerType." + handlerType + ",config.pathPrefix + \"" + endpointPath.toString() + "\"," + rolesStr + "ctx -> {\n" +
                                 String.join("", parametersDecl) +
                                 String.format("var response = %s.%s(%s);\n", varDecl, executableElement.getSimpleName(), String.join(",", parametersCall)) +
                                 responseType + "\n" +
-                        "\n}));"
+                                "\n}));"
                 );
 
             }
         }
 
 
-        if (controllers.size() > 0) {
+        if (!controllers.isEmpty()) {
 //        String packageName = elementUtils.getPackageOf(annotatedElement).getQualifiedName().toString();
 
             Element controllerElement = controllers.iterator().next();
 
+            if(injectorRoles == null) {
+                error("Missing a class annotated with @%s", JavalinFlyInjector.class.getSimpleName());
+                return true;
+            }
+
+            for(var entry : selectedRoles.entrySet()) {
+                if(!injectorRoles.contains(entry.getKey())) {
+                    error(entry.getValue(), "Role '%s' is missing at @%s", entry.getKey(), JavalinFlyInjector.class.getSimpleName());
+                    return true;
+                }
+            }
             generateClass(controllerElement);
 //            error(controllers.iterator().next(), "Error generating class %s: Testing stuff", FULL_CLASS);
 //            error(e, "errore: classe %s non ha l'annotazione niagara 4", e.getSimpleName().toString());
