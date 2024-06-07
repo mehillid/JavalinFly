@@ -11,4 +11,6 @@ import java.lang.annotation.Target;
 
 public @interface Body {
 
+    boolean customType() default false;
+
 }

@@ -145,7 +145,15 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 
                         parametersCall.add(nameParameter);
 
-                        parametersDecl.add(String.format("%s %s = (%s) ctx.bodyAsClass(%s.class);\n", typeParameter, nameParameter, typeParameter, classParameter));
+                        if(body.customType()) {
+                            if(!typeParameter.equals(String.class.getName())) {
+                                error(variableElement, "Body parameter '%s' must be a String since is customType", nameParameter);
+                                return true;
+                            }
+                            parametersDecl.add(String.format("String %s = ctx.body();\n", nameParameter));
+                        } else {
+                            parametersDecl.add(String.format("%s %s = (%s) ctx.bodyAsClass(%s.class);\n", typeParameter, nameParameter, typeParameter, classParameter));
+                        }
                     }
 
                     Path path = variableElement.getAnnotation(Path.class);

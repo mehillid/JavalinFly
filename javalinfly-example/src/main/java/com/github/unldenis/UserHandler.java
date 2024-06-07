@@ -6,7 +6,7 @@ import io.javalin.http.Context;
 
 import java.util.List;
 
-@Controller(path = "/userr") public class UserHandler {
+@Controller(path = "/user") public class UserHandler {
 
 //    @Post(responseType = ResponseType.STRING)
 //    public Response<String, String> createUser(Context ctx, @Body User user) {

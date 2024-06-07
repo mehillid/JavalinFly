@@ -1,9 +1,6 @@
 package com.github.unldenis;
 
-import com.github.unldenis.javalinfly.Controller;
-import com.github.unldenis.javalinfly.Get;
-import com.github.unldenis.javalinfly.Response;
-import com.github.unldenis.javalinfly.ResponseType;
+import com.github.unldenis.javalinfly.*;
 import io.javalin.http.Context;
 
 @Controller(path = "/hello")
@@ -17,5 +14,9 @@ public class Hello {
         return Response.ok("hello");
     }
 
+    @Post(responseType = ResponseType.STRING)
+    public Response<String, String> createAll(Context ctx, @Body(customType = true) String users) {
+        return Response.ok("posted all");
+    }
 
 }
