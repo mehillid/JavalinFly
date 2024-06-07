@@ -7,15 +7,16 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class JavalinFly {
 
-  public static void inject(@NotNull Supplier<JavalinFlyConfig> config) {
+  public static void inject(@NotNull Javalin app, @NotNull Consumer<JavalinFlyConfig> config) {
     try {
       Class<?> cl = Class.forName(JavalinFlyProcessor.FULL_CLASS);
       Object instance = cl.getDeclaredConstructor().newInstance();
-      cl.getDeclaredMethod(JavalinFlyProcessor.METHOD_NAME, Supplier.class).invoke(instance, config);
+      cl.getDeclaredMethod(JavalinFlyProcessor.METHOD_NAME, Javalin.class, Consumer.class).invoke(instance, app, config);
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(String.format("class %s not injected", JavalinFlyProcessor.FULL_CLASS));
     } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {

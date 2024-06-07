@@ -31,7 +31,7 @@ public class JavalinFlyProcessor extends AbstractProcessor {
     public static String SIMPLE_CLASS_NAME = "GeneratedClass";
     public static String PACKAGE_NAME = JavalinFlyProcessor.class.getPackageName();
     public static String FULL_CLASS = PACKAGE_NAME + "." + SIMPLE_CLASS_NAME;
-    public static String METHOD_NAME = "hello";
+    public static String METHOD_NAME = "init";
 
     private Types typeUtils;
     private Elements elementUtils;
@@ -168,7 +168,7 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 
 
                 endpoints.add(
-                        "config.app.addEndpoint(new Endpoint(HandlerType." + handlerType + ",\"" + endpointPath.toString() + "\", config.roles.values().toArray(RouteRole[]::new), ctx -> {\n" +
+                        "javalin.addEndpoint(new Endpoint(HandlerType." + handlerType + ",config.pathPrefix + \""  + endpointPath.toString() + "\", config.roles.values().toArray(RouteRole[]::new), ctx -> {\n" +
                                 String.join("", parametersDecl) +
                                 String.format("var response = %s.%s(%s);\n", varDecl, executableElement.getSimpleName(), String.join(",", parametersCall)) +
                                 responseType + "\n" +
@@ -232,11 +232,12 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 
     private void generateClass(Element element) {
         String source = "package " + PACKAGE_NAME + ";\n\n" +
-                "import java.util.function.Supplier;\n" +
+                "import java.util.function.Consumer;\n" +
                 "import java.util.HashSet;\n" +
 
                 "import com.github.unldenis.javalinfly.processor.JavalinFlyConfig;\n" +
 
+                "import io.javalin.Javalin;\n" +
                 "import io.javalin.security.Roles;\n" +
                 "import io.javalin.http.HandlerType;\n" +
                 "import io.javalin.router.Endpoint;\n" +
@@ -247,8 +248,9 @@ public class JavalinFlyProcessor extends AbstractProcessor {
                 "public class " + SIMPLE_CLASS_NAME + " {\n" +
                 "    public " + SIMPLE_CLASS_NAME + "(){}\n" +
                 String.join("", handlersField) +
-                "    public void " + METHOD_NAME + "(Supplier<JavalinFlyConfig> configFun) {\n" +
-                "        JavalinFlyConfig config = configFun.get();\n" +
+                "    public void " + METHOD_NAME + "(Javalin javalin, Consumer<JavalinFlyConfig> configFun) {\n" +
+                "        JavalinFlyConfig config = new JavalinFlyConfig();\n" +
+                "        configFun.accept(config);\n" +
                 "        System.out.println(\"Hello from \" + config.roles);\n" +
                 String.join("", endpoints) +
                 "    }\n" +
