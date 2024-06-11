@@ -8,6 +8,7 @@ import io.javalin.router.Endpoint;
 import io.javalin.router.EndpointMetadata;
 import io.javalin.security.Roles;
 import io.javalin.security.RouteRole;
+import javax.tools.Diagnostic.Kind;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -278,16 +279,20 @@ public class JavalinFlyProcessor extends AbstractProcessor {
         return null;
     }
 
-    private void error(Element e, String msg, Object... args) {
+    private void error(@NotNull Element e, @NotNull String msg, @NotNull Object... args) {
         messager.printMessage(Diagnostic.Kind.ERROR, String.format(msg, args), e);
     }
 
-    private void error(String msg, Object... args) {
+    private void error(@NotNull String msg, @NotNull Object... args) {
         messager.printMessage(Diagnostic.Kind.ERROR, String.format(msg, args));
     }
 
-    private void print(String msg, Object... args) {
-        messager.printMessage(Diagnostic.Kind.NOTE, String.format(msg, args));
+    private void print(@NotNull String msg, @NotNull Object... args) {
+        messager.printMessage(Kind.NOTE, String.format(msg, args));
+    }
+
+    private void warning(@NotNull String msg, @NotNull Object... args) {
+        messager.printMessage(Kind.WARNING, String.format(msg, args));
     }
 
     private void generateClass(Element element) {
