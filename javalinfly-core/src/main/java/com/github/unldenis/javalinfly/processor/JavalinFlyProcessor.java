@@ -1,7 +1,11 @@
 package com.github.unldenis.javalinfly.processor;
 
 import com.github.unldenis.javalinfly.*;
+import com.github.unldenis.javalinfly.processor.utils.EnumUtils;
+import com.github.unldenis.javalinfly.processor.utils.ProcessorUtil;
 import com.google.auto.service.AutoService;
+import io.javalin.security.RouteRole;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,7 +16,6 @@ import javax.lang.model.element.*;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import javax.tools.Diagnostic;
 import java.util.*;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
@@ -55,7 +58,10 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 //            return true;
 //        }
         // check injector
+        print("** 0");
+
         Set<? extends Element> injectors = roundEnv.getElementsAnnotatedWith(JavalinFlyInjector.class);
+        TypeMirror rolesTypeMirror;
         if(!injectors.isEmpty())
         {
 
@@ -75,12 +81,33 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 
 
             TypeElement annotatedElement = (TypeElement) injectorElement;
-            JavalinFlyInjector injector = annotatedElement.getAnnotation(JavalinFlyInjector.class);
-            injectorRoles = Arrays.stream(injector.roles()).collect(Collectors.toSet());
+            AnnotationMirror annotationMirror = ProcessorUtil.getAnnotationMirror(annotatedElement, JavalinFlyInjector.class);
+
+            if(annotationMirror == null) {
+                error(injectorElement, "Error loading AnnotationMirror from type element %s of annotation @%s", annotatedElement.getQualifiedName().toString(), JavalinFlyInjector.class.getSimpleName());
+                return true;
+            }
+
+            AnnotationValue annotationValue = ProcessorUtil.getAnnotationValue(annotationMirror, "rolesClass");
+            if(annotationValue == null) {
+                error(injectorElement, "Error loading AnnotationValue from type element %s of annotation @%s", annotatedElement.getQualifiedName().toString(), JavalinFlyInjector.class.getSimpleName());
+                return true;
+            }
+            rolesTypeMirror = (TypeMirror) annotationValue.getValue();
+
+
+            boolean implementsInterface = new InterfaceChecker(processingEnv).implementsInterface(rolesTypeMirror, "io.javalin.security.RouteRole");
+
+            if(!implementsInterface) {
+                error(injectorElement, "Class '%s' does not implement '%s'", rolesTypeMirror.toString(), RouteRole.class.getSimpleName());
+                return true;
+            }
+            injectorRoles = new EnumUtils(processingEnv).getEnumConstants(rolesTypeMirror);
+        } else {
+            rolesTypeMirror = null;
         }
 
-
-        Set<? extends Element> controllers = roundEnv.getElementsAnnotatedWith(Controller.class);
+      Set<? extends Element> controllers = roundEnv.getElementsAnnotatedWith(Controller.class);
 
         // Iterate over all @Controller annotated elements
         for (Element elementController : controllers) {
@@ -156,7 +183,7 @@ public class JavalinFlyProcessor extends AbstractProcessor {
                     }
 
                     rolesStr = ", new RouteRole[]{";
-                    rolesStr += String.join(",", Arrays.stream(handlerRoles).map(roleName -> "config.roles.get(\"" + roleName + "\")").collect(Collectors.toSet()));
+                    rolesStr += String.join(",", Arrays.stream(handlerRoles).map(roleName ->rolesTypeMirror.toString()  + "." + roleName).collect(Collectors.toSet()));
                     rolesStr += "}";
                 }
 
@@ -308,11 +335,12 @@ public class JavalinFlyProcessor extends AbstractProcessor {
                 "    public void " + METHOD_NAME + "(Javalin javalin, Consumer<JavalinFlyConfig> configFun) {\n" +
                 "        JavalinFlyConfig config = new JavalinFlyConfig();\n" +
                 "        configFun.accept(config);\n" +
-                "        System.out.println(\"Hello from \" + config.roles);\n" +
                 String.join("", endpoints) +
                 "    }\n" +
                 "}\n";
-//        print(source);
+
+
+        print(source);
         try {
             JavaFileObject sourceFile = filer.createSourceFile(FULL_CLASS, element);
             try (Writer writer = sourceFile.openWriter()) {

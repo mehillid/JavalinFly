@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class JavalinFlyConfig {
 
-    public Map<String, ? extends RouteRole> roles;
+//    public Map<String, ? extends RouteRole> roles;
     public String pathPrefix = "";
 
 }

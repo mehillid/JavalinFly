@@ -1,5 +1,6 @@
 package com.github.unldenis;
 
+import com.github.unldenis.Bootstrap.MyRoles;
 import com.github.unldenis.javalinfly.JavalinFly;
 import com.github.unldenis.javalinfly.JavalinFlyInjector;
 import io.javalin.Javalin;
@@ -7,7 +8,7 @@ import io.javalin.security.RouteRole;
 
 import java.util.Map;
 
-@JavalinFlyInjector(roles = {"guest", "user", "admin"})
+@JavalinFlyInjector(rolesClass = MyRoles.class)
 public class Bootstrap {
 
     public enum MyRoles implements RouteRole {
@@ -24,7 +25,6 @@ public class Bootstrap {
 
 
         JavalinFly.inject(app, config -> {
-            config.roles = Map.of("guest", MyRoles.GUEST, "user", MyRoles.USER, "admin", MyRoles.ADMIN);
             config.pathPrefix = "/api/v1";
         });
     }

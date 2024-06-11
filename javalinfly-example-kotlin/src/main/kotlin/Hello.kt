@@ -6,7 +6,7 @@ import io.javalin.http.Context
 
 @Controller(path = "/hello")
 class Hello {
-    @Get(responseType = ResponseType.STRING, roles = ["user", "admin"])
+    @Get(responseType = ResponseType.STRING, roles = ["USER", "ADMIN"])
     fun main(ctx: Context): Response<String, String> {
         return ok("hello")
     }

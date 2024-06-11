@@ -5,9 +5,7 @@ import com.github.unldenis.javalinfly.JavalinFlyInjector
 import io.javalin.Javalin
 import java.util.*
 
-@JavalinFlyInjector(
-    roles = ["guest", "user", "admin"]
-)
+@JavalinFlyInjector(rolesClass = MyRoles::class)
 object Bootstrap
 
 fun main() {
@@ -17,7 +15,6 @@ fun main() {
 
 
     JavalinFly.inject(app) {
-        it.roles = MyRoles.entries.associateBy { role -> role.name.lowercase(Locale.getDefault()) }
 
         it.pathPrefix = "/api/v1"
     }
