@@ -2,12 +2,6 @@ package com.github.unldenis.javalinfly.processor;
 
 import com.github.unldenis.javalinfly.*;
 import com.google.auto.service.AutoService;
-import io.javalin.Javalin;
-import io.javalin.http.HandlerType;
-import io.javalin.router.Endpoint;
-import io.javalin.router.EndpointMetadata;
-import io.javalin.security.Roles;
-import io.javalin.security.RouteRole;
 import javax.tools.Diagnostic.Kind;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -161,9 +155,9 @@ public class JavalinFlyProcessor extends AbstractProcessor {
                         selectedRoles.put(role, executableElement);
                     }
 
-                    rolesStr = "new RouteRole[]{";
+                    rolesStr = ", new RouteRole[]{";
                     rolesStr += String.join(",", Arrays.stream(handlerRoles).map(roleName -> "config.roles.get(\"" + roleName + "\")").collect(Collectors.toSet()));
-                    rolesStr += "},";
+                    rolesStr += "}";
                 }
 
 
@@ -218,11 +212,11 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 
 
                 endpoints.add(
-                        "javalin.addEndpoint(new Endpoint(HandlerType." + handlerType + ",config.pathPrefix + \"" + endpointPath.toString() + "\"," + rolesStr + "ctx -> {\n" +
+                        "javalin.addHandler(HandlerType." + handlerType + ",config.pathPrefix + \"" + endpointPath.toString() + "\", ctx -> {\n" +
                                 String.join("", parametersDecl) +
                                 String.format("var response = %s.%s(%s);\n", varDecl, executableElement.getSimpleName(), String.join(",", parametersCall)) +
                                 responseType + "\n" +
-                                "\n}));"
+                                "\n} " + rolesStr + ");\n"
                 );
 
             }
@@ -280,11 +274,11 @@ public class JavalinFlyProcessor extends AbstractProcessor {
     }
 
     private void error(@NotNull Element e, @NotNull String msg, @NotNull Object... args) {
-        messager.printMessage(Diagnostic.Kind.ERROR, String.format(msg, args), e);
+        messager.printMessage(Kind.ERROR, String.format(msg, args), e);
     }
 
     private void error(@NotNull String msg, @NotNull Object... args) {
-        messager.printMessage(Diagnostic.Kind.ERROR, String.format(msg, args));
+        messager.printMessage(Kind.ERROR, String.format(msg, args));
     }
 
     private void print(@NotNull String msg, @NotNull Object... args) {
@@ -303,9 +297,7 @@ public class JavalinFlyProcessor extends AbstractProcessor {
                 "import com.github.unldenis.javalinfly.processor.JavalinFlyConfig;\n" +
 
                 "import io.javalin.Javalin;\n" +
-                "import io.javalin.security.Roles;\n" +
                 "import io.javalin.http.HandlerType;\n" +
-                "import io.javalin.router.Endpoint;\n" +
                 "import io.javalin.http.Context;\n" +
                 "import io.javalin.http.Handler;\n" +
                 "import io.javalin.security.RouteRole;\n" +
@@ -320,7 +312,6 @@ public class JavalinFlyProcessor extends AbstractProcessor {
                 String.join("", endpoints) +
                 "    }\n" +
                 "}\n";
-
 //        print(source);
         try {
             JavaFileObject sourceFile = filer.createSourceFile(FULL_CLASS, element);
