@@ -11,6 +11,8 @@
   <modules>
     <module>javalinfly-core</module>
     <module>javalinfly-example</module>
+    <module>javalinfly-kotlin</module>
+    <module>javalinfly-example-kotlin</module>
   </modules>
 
   <properties>
