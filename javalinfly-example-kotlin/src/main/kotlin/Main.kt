@@ -17,5 +17,7 @@ fun main() {
     JavalinFly.inject(app) {
 
         it.pathPrefix = "/api/v1"
+
+        it.openapi.title = "My App"
     }
 } // https://stackoverflow.com/questions/38926255/maven-annotation-processing-processor-not-found

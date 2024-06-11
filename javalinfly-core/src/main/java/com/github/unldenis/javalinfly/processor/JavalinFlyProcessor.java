@@ -99,7 +99,7 @@ public class JavalinFlyProcessor extends AbstractProcessor {
             boolean implementsInterface = new InterfaceChecker(processingEnv).implementsInterface(rolesTypeMirror, "io.javalin.security.RouteRole");
 
             if(!implementsInterface) {
-                error(injectorElement, "Class '%s' does not implement '%s'", rolesTypeMirror.toString(), RouteRole.class.getSimpleName());
+                error(injectorElement, "Class '%s' does not implement '%s'", rolesTypeMirror.toString(), "io.javalin.security.RouteRole");
                 return true;
             }
             injectorRoles = new EnumUtils(processingEnv).getEnumConstants(rolesTypeMirror);
