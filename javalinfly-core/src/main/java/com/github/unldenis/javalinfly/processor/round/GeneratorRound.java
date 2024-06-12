@@ -2,16 +2,24 @@ package com.github.unldenis.javalinfly.processor.round;
 
 import com.github.unldenis.javalinfly.JavalinFly;
 import com.github.unldenis.javalinfly.JavalinFlyInjector;
+import com.github.unldenis.javalinfly.Vars;
+import com.github.unldenis.javalinfly.openapi.OpenApiTranslator;
+import com.github.unldenis.javalinfly.openapi.SwaggerUIHtmlGenerator;
 import com.github.unldenis.javalinfly.openapi.model.Info;
 import com.github.unldenis.javalinfly.openapi.model.Info.Contact;
+import com.github.unldenis.javalinfly.openapi.model.OpenApi;
+import com.github.unldenis.javalinfly.processor.JavalinFlyConfig;
 import com.github.unldenis.javalinfly.processor.JavalinFlyProcessor;
 import com.github.unldenis.javalinfly.processor.Round;
 import io.javalin.Javalin;
 import io.javalin.http.HandlerType;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.function.Consumer;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.tools.JavaFileObject;
@@ -53,19 +61,22 @@ public class GeneratorRound extends Round {
 //            return true;
   }
 
+  private String addClassImport(Class<?> cl) {
+    return "import " + cl.getName() + ";\n";
+  }
   private void generateClass(Element element) {
 
     String source = "package " + PACKAGE_NAME + ";\n\n" +
-        "import java.util.function.Consumer;\n" +
-        "import java.util.HashSet;\n" +
-        "import java.util.Arrays;\n" +
-        "import java.util.Collections;\n" +
+        addClassImport(Consumer.class) +
+        addClassImport(HashSet.class) +
+        addClassImport(Arrays.class) +
+        addClassImport(Collections.class) +
 
-        "import com.github.unldenis.javalinfly.processor.JavalinFlyConfig;\n" +
-        "import com.github.unldenis.javalinfly.openapi.OpenApiTranslator;\n" +
-        "import com.github.unldenis.javalinfly.openapi.SwaggerUIHtmlGenerator;\n" +
-        "import com.github.unldenis.javalinfly.openapi.model.OpenApi;\n" +
-        "import com.github.unldenis.javalinfly.Vars;\n" +
+        addClassImport(JavalinFlyConfig.class) +
+        addClassImport(OpenApiTranslator.class) +
+        addClassImport(SwaggerUIHtmlGenerator.class) +
+        addClassImport(OpenApi.class) +
+        addClassImport(Vars.class) +
 
         "import io.javalin.Javalin;\n" +
         "import io.javalin.http.HandlerType;\n" +

@@ -125,7 +125,7 @@ public class OpenApiTranslator {
             "0.1",
             new Contact(
                 "Denis",
-                "github.com/unldenis",
+                "https://github.com/unldenis",
                 "user@domain.com"
             ))
         )
