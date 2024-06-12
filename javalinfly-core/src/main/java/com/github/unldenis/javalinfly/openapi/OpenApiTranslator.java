@@ -9,6 +9,7 @@ import com.github.unldenis.javalinfly.openapi.model.Components;
 import com.github.unldenis.javalinfly.openapi.model.Components.SecuritySchemes;
 import com.github.unldenis.javalinfly.openapi.model.Components.SecuritySchemes.BearerAuth;
 import com.github.unldenis.javalinfly.openapi.model.Info;
+import com.github.unldenis.javalinfly.openapi.model.Info.Contact;
 import com.github.unldenis.javalinfly.openapi.model.OpenApi;
 import com.github.unldenis.javalinfly.openapi.model.Path;
 import com.github.unldenis.javalinfly.openapi.model.Path.PathMethod;
@@ -102,12 +103,20 @@ public class OpenApiTranslator {
   }
 
 
-  public String asString(Info info, List<Servers> servers)  {
-    OpenApi openApi = OpenApi.builder()
+  public OpenApi build()  {
+    return OpenApi.builder()
         .openapi("3.0.3")
-        .info(info)
-        .servers(servers)
-        .security(Arrays.asList(new Security(Collections.emptyList())))
+        .info(new Info(
+            "App built with JavalinFly",
+            "0.1",
+            new Contact(
+                "Denis",
+                "github.com/unldenis",
+                "user@domain.com"
+            ))
+        )
+        .servers(Collections.emptyList())
+        .security(List.of(new Security(Collections.emptyList())))
         .components(new Components(
             new SecuritySchemes(
                 new BearerAuth("http", "bearer", "JWT")
@@ -117,6 +126,10 @@ public class OpenApiTranslator {
         .paths(path_mapped)
         .tags(Collections.emptyList())
         .build();
+
+  }
+
+  public String asString(OpenApi openApi) {
     try {
       return MAPPER.writeValueAsString(openApi);
     } catch (JsonProcessingException e) {

@@ -3,8 +3,6 @@ package com.github.unldenis;
 import com.github.unldenis.Bootstrap.MyRoles;
 import com.github.unldenis.javalinfly.JavalinFly;
 import com.github.unldenis.javalinfly.JavalinFlyInjector;
-import com.github.unldenis.javalinfly.JavalinFlyInjector.Info;
-import com.github.unldenis.javalinfly.JavalinFlyInjector.Info.Contact;
 import io.javalin.Javalin;
 import io.javalin.security.RouteRole;
 
@@ -21,13 +19,7 @@ public class Bootstrap {
 
 
     @JavalinFlyInjector(
-        rolesClass = MyRoles.class,
-        info = @Info(
-            title = "My App",
-            contact = @Contact(
-                url = "qlsol.com"
-            )
-        )
+        rolesClass = MyRoles.class
     )
     public static void main(String[] args) {
 
@@ -38,6 +30,9 @@ public class Bootstrap {
 
         JavalinFly.inject(app, config -> {
             config.pathPrefix = "/api/v1";
+            config.openapi = openApi -> {
+              openApi.info.version = "1.0";
+            };
         });
     }
 

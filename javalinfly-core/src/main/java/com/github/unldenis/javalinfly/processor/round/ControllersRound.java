@@ -39,13 +39,12 @@ public class ControllersRound extends Round {
 
 
 
-  public final OpenApiTranslator openApiTranslator = new OpenApiTranslator();
-
   public Map<String, ExecutableElement> selectedRoles = new HashMap<>();
 
   // generator
   public final Set<String> endpoints = new HashSet<>();
   public final Set<String> handlersField = new HashSet<>();
+  public final List<String> openApiStatements = new ArrayList<>();
 
 
   public ControllersRound(MessagerRound messager, RoundEnvironment roundEnv,
@@ -188,7 +187,7 @@ public class ControllersRound extends Round {
             parametersDecl.add(String.format("String %s = ctx.pathParam(\"%s\");\n", nameParameter,
                 nameParameter));
 
-            pathParameters.add(nameParameter);
+            pathParameters.add("\"" + nameParameter + "\"");
           }
 
           Query query = variableElement.getAnnotation(Query.class);
@@ -199,7 +198,8 @@ public class ControllersRound extends Round {
             parametersDecl.add(String.format("String %s = ctx.queryParam(\"%s\");\n", nameParameter,
                 nameParameter));
 
-            queryParameters.add(nameParameter);
+            queryParameters.add("\"" + nameParameter + "\"");
+
           }
         }
 
@@ -213,31 +213,21 @@ public class ControllersRound extends Round {
                 "\n} " + rolesStr + ");\n"
         );
 
-        openApiTranslator.addPath(
-            endpointPath.toString(),
-            handlerType,
-            handlerRoles,
-            summary,
-            pathParameters,
-            queryParameters
+        var roles = "new String[]{"+ Arrays.stream(handlerRoles).map(roleName -> "\"" + roleName + "\"").collect(Collectors.joining(",")) + "}";
+        if(handlerRoles.length == 0) {
+          roles = "new String[0]";
+        }
 
-        );
-
-//        var roles = "new String[]{"+ Arrays.stream(handlerRoles).map(roleName -> "\"" + roleName + "\"").collect(Collectors.joining(",")) + "}";
-//        if(handlerRoles.length == 0) {
-//          roles = "new String[0]";
-//        }
-//
-//        openApiStatements.add(
-//            String.format(
-//                "openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %s, %s);\n",
-//                endpointPath.toString(),
-//                handlerType,
-//                roles,
-//                summary,
-//                pathParameters.isEmpty() ? "Collections.emptyList()" : String.format("Arrays.asList(%s)", String.join(",", pathParameters)),
-//                queryParameters.isEmpty() ? "Collections.emptyList()" : String.format("Arrays.asList(%s)", String.join(",", queryParameters))
-//        ));
+        openApiStatements.add(
+            String.format(
+                "openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %s, %s);\n",
+                endpointPath.toString(),
+                handlerType,
+                roles,
+                summary,
+                pathParameters.isEmpty() ? "Collections.emptyList()" : String.format("Arrays.asList(%s)", String.join(",", pathParameters)),
+                queryParameters.isEmpty() ? "Collections.emptyList()" : String.format("Arrays.asList(%s)", String.join(",", queryParameters))
+        ));
       }
     }
   }

@@ -6,8 +6,8 @@ import java.util.List;
 public class OpenApi {
 
   public final String openapi;
-  public final Info info;
-  public final List<Servers> servers;
+  public Info info;
+  public List<Servers> servers;
   public final List<Security> security;
   public final Components components;
   public final LinkedHashMap<String, Path> paths;

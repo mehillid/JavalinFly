@@ -19,9 +19,9 @@ public class Components {
     }
 
     public static class BearerAuth {
-      public final String type;
-      public final String scheme;
-      public final String bearerFormat;
+      public String type;
+      public String scheme;
+      public String bearerFormat;
 
 
       public BearerAuth(String type, String scheme, String bearerFormat) {

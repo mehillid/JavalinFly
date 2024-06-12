@@ -69,7 +69,7 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 
 
     if(controllersRound.endpoints.isEmpty()) {
-      messagerRound.error("Missing a class annotated with @%s", Controller.class.getSimpleName());
+//      messagerRound.error("Missing a class annotated with @%s", Controller.class.getSimpleName());
       return true;
     }
 

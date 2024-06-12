@@ -7,6 +7,7 @@ import com.github.unldenis.javalinfly.processor.JavalinFlyProcessor;
 import com.github.unldenis.javalinfly.processor.Round;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Base64;
 import java.util.Collections;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
@@ -50,6 +51,7 @@ public class GeneratorRound extends Round {
   }
 
   private void generateClass(Element element) {
+
     String source = "package " + PACKAGE_NAME + ";\n\n" +
         "import java.util.function.Consumer;\n" +
         "import java.util.HashSet;\n" +
@@ -58,6 +60,8 @@ public class GeneratorRound extends Round {
 
         "import com.github.unldenis.javalinfly.processor.JavalinFlyConfig;\n" +
         "import com.github.unldenis.javalinfly.openapi.OpenApiTranslator;\n" +
+        "import com.github.unldenis.javalinfly.openapi.model.OpenApi;\n" +
+        "import com.github.unldenis.javalinfly.Vars;\n" +
 
         "import io.javalin.Javalin;\n" +
         "import io.javalin.http.HandlerType;\n" +
@@ -75,21 +79,15 @@ public class GeneratorRound extends Round {
         "        OpenApiTranslator openApiTranslator = new OpenApiTranslator();\n" +
 //        "        System.out.println(openApiTranslator.asString(config.openapi, config.openapiServers));\n"
 
+        String.join("", controllersRound.openApiStatements) +
+        "        OpenApi openApi = openApiTranslator.build();\n" +
+        "        config.openapi.edit(openApi);\n" +
+        "        System.out.println(openApiTranslator.asString(openApi));\n" +
 
         String.join("", controllersRound.endpoints) +
         "    }\n" +
         "}\n";
 
-    var infoAnn = javalinFlyInjectorRound.javalinFlyInjectorAnn.info();
-    messager.print(controllersRound.openApiTranslator.asString(new Info(
-        infoAnn.title(),
-        infoAnn.version(),
-        new Contact(
-            infoAnn.contact().name(),
-            infoAnn.contact().url(),
-            infoAnn.contact().email()
-        )
-    ), Collections.emptyList()));
     try {
       JavaFileObject sourceFile = filer.createSourceFile(FULL_CLASS, element);
       try (Writer writer = sourceFile.openWriter()) {
