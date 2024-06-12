@@ -1,6 +1,7 @@
 package com.github.unldenis.javalinfly.processor.utils;
 
 import java.util.Map.Entry;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -8,7 +9,10 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic.Kind;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static java.util.Locale.ENGLISH;
@@ -43,9 +47,9 @@ public final class ProcessorUtil {
     return (TypeElement) typeUtils.asElement(typeMirror);
   }
 
-  public static @Nullable AnnotationMirror getAnnotationMirror(TypeElement typeElement, Class<?> clazz) {
+  public static @Nullable AnnotationMirror getAnnotationMirror(Element element, Class<?> clazz) {
     String clazzName = clazz.getName();
-    for(AnnotationMirror m : typeElement.getAnnotationMirrors()) {
+    for(AnnotationMirror m : element.getAnnotationMirrors()) {
       if(m.getAnnotationType().toString().equals(clazzName)) {
         return m;
       }
@@ -63,6 +67,22 @@ public final class ProcessorUtil {
     return null;
   }
 
+  public static boolean implementsInterface(ProcessingEnvironment processingEnv, TypeMirror typeMirror, String interfaceClass) {
+    Types typeUtils = processingEnv.getTypeUtils();
+    Elements elementUtils = processingEnv.getElementUtils();
+
+    // Get the TypeElement for the interface
+    TypeElement interfaceElement = elementUtils.getTypeElement(interfaceClass);
+    if (interfaceElement == null) {
+//            throw new IllegalArgumentException("Interface not found: " + interfaceClass.getCanonicalName());
+      return false;
+    }
+
+    TypeMirror interfaceTypeMirror = interfaceElement.asType();
+
+    // Check if the TypeMirror implements the interface
+    return typeUtils.isAssignable(typeMirror, interfaceTypeMirror);
+  }
 
 
 }

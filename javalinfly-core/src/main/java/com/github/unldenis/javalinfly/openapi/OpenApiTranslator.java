@@ -42,7 +42,7 @@ public class OpenApiTranslator {
     PathMethod cachedPathMethod = new Path.PathMethod();
 
     // description
-    String description = "Limited to " + String.join(" or ", roles);
+    String description = roles.length == 0  ? null : "Limited to " + String.join(" or ", roles);
     // end description
 
     cachedPathMethod.summary = summary;
