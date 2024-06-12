@@ -51,6 +51,7 @@ public class OpenApiTranslator {
     cachedPathMethod.tags = Collections.emptyList();
     cachedPathMethod.responses = new LinkedHashMap<>();
 
+
     int parametersAmount = 0;
     for (String pathParam : pathParameters) {
       if(parametersAmount == 0) {

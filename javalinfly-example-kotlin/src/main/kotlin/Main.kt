@@ -2,6 +2,8 @@ package com.github.unldenis
 
 import com.github.unldenis.javalinfly.JavalinFly
 import com.github.unldenis.javalinfly.JavalinFlyInjector
+import com.github.unldenis.javalinfly.kotlin.openapi
+import com.github.unldenis.javalinfly.openapi.model.Servers
 import com.github.unldenis.javalinfly.processor.JavalinFlyConfig
 import io.javalin.Javalin
 import java.util.*
@@ -19,8 +21,12 @@ fun main() {
     JavalinFly.inject(app) {
 
         it.pathPrefix = "/api/v1"
-        it.openapi = JavalinFlyConfig.OpenApiFun { openapi ->
-            openapi.info.title = "My App"
+        it.openapi {
+            info.title = "My App"
+            servers = listOf(
+                Servers("http://localhost:7070/api/v1", "This is localhost server"),
+                Servers("https://domain.com/api/v1", "Cloud server")
+            )
         }
     }
 } // https://stackoverflow.com/questions/38926255/maven-annotation-processing-processor-not-found

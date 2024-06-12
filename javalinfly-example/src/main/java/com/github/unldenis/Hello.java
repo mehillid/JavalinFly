@@ -14,6 +14,7 @@ public class Hello {
         return Response.ok("hello");
     }
 
+
     @Post(responseType = ResponseType.STRING)
     public Response<String, String> createAll(Context ctx, @Body(customType = true) String users) {
         return Response.ok("posted all");

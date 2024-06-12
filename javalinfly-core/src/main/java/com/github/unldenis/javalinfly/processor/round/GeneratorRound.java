@@ -1,10 +1,13 @@
 package com.github.unldenis.javalinfly.processor.round;
 
+import com.github.unldenis.javalinfly.JavalinFly;
 import com.github.unldenis.javalinfly.JavalinFlyInjector;
 import com.github.unldenis.javalinfly.openapi.model.Info;
 import com.github.unldenis.javalinfly.openapi.model.Info.Contact;
 import com.github.unldenis.javalinfly.processor.JavalinFlyProcessor;
 import com.github.unldenis.javalinfly.processor.Round;
+import io.javalin.Javalin;
+import io.javalin.http.HandlerType;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Base64;
@@ -60,6 +63,7 @@ public class GeneratorRound extends Round {
 
         "import com.github.unldenis.javalinfly.processor.JavalinFlyConfig;\n" +
         "import com.github.unldenis.javalinfly.openapi.OpenApiTranslator;\n" +
+        "import com.github.unldenis.javalinfly.openapi.SwaggerUIHtmlGenerator;\n" +
         "import com.github.unldenis.javalinfly.openapi.model.OpenApi;\n" +
         "import com.github.unldenis.javalinfly.Vars;\n" +
 
@@ -76,17 +80,25 @@ public class GeneratorRound extends Round {
         + "(Javalin javalin, Consumer<JavalinFlyConfig> configFun) {\n" +
         "        JavalinFlyConfig config = new JavalinFlyConfig();\n" +
         "        configFun.accept(config);\n" +
-        "        OpenApiTranslator openApiTranslator = new OpenApiTranslator();\n" +
-//        "        System.out.println(openApiTranslator.asString(config.openapi, config.openapiServers));\n"
-
+        "        {\n" +
+        "            OpenApiTranslator openApiTranslator = new OpenApiTranslator();\n" +
         String.join("", controllersRound.openApiStatements) +
-        "        OpenApi openApi = openApiTranslator.build();\n" +
-        "        config.openapi.edit(openApi);\n" +
-        "        System.out.println(openApiTranslator.asString(openApi));\n" +
-
+        "            OpenApi openApi = openApiTranslator.build();\n" +
+        "            config.openapi.edit(openApi);\n" +
+        "            String openApiSpec = openApiTranslator.asString(openApi);\n" +
+        "            Vars.openApiSpec(openApiSpec);\n"+
+        "            Vars.swaggerUi(SwaggerUIHtmlGenerator.generateSwaggerUIHtml(Vars.openApiSpec()));\n" +
+        "        }\n" +
+        "        {\n" +
+        "            javalin.addHandler(HandlerType.GET, \"/openapi\", ctx -> {\n" +
+        "                 ctx.html(Vars.swaggerUi());\n" +
+        "            });\n" +
+        "        }\n" +
         String.join("", controllersRound.endpoints) +
         "    }\n" +
         "}\n";
+
+    Javalin app ;
 
     try {
       JavaFileObject sourceFile = filer.createSourceFile(FULL_CLASS, element);

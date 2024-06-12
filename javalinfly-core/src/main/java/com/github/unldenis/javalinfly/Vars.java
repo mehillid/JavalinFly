@@ -7,25 +7,24 @@ import java.util.List;
 public class Vars {
 
 
-  private static List<Servers> SERVERS;
+  private static String OPEN_API_SPEC = null;
 
-  public static List<Servers> servers() {
-    return SERVERS;
+  public static String openApiSpec() {
+    return OPEN_API_SPEC;
   }
 
-  public static void servers(List<Servers> servers) {
-    SERVERS = servers;
+  public static void openApiSpec(String openApiSpec) {
+    OPEN_API_SPEC = openApiSpec;
   }
 
 
-  private static OpenApi OPEN_API;
+  private static String SWAGGER_UI = null;
 
-  public static OpenApi openApi() {
-    return OPEN_API;
+  public static String swaggerUi() {
+    return SWAGGER_UI;
   }
 
-  public static void openApi(OpenApi openApi) {
-    OPEN_API = openApi;
+  public static void swaggerUi(String swaggerUi) {
+    SWAGGER_UI = swaggerUi;
   }
-
 }
