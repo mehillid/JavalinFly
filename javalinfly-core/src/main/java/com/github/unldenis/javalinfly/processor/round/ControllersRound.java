@@ -10,6 +10,7 @@ import com.github.unldenis.javalinfly.Put;
 import com.github.unldenis.javalinfly.Query;
 import com.github.unldenis.javalinfly.Response;
 import com.github.unldenis.javalinfly.openapi.OpenApiTranslator;
+import com.github.unldenis.javalinfly.openapi.model.Schema;
 import com.github.unldenis.javalinfly.processor.Round;
 import com.github.unldenis.javalinfly.processor.utils.ProcessorUtil;
 import com.github.unldenis.javalinfly.processor.utils.StringUtils;
@@ -161,6 +162,7 @@ public class ControllersRound extends Round {
 
         List<String> pathParameters = new ArrayList<>();
         List<String> queryParameters = new ArrayList<>();
+        String bodyParameter = "null";
         for (VariableElement variableElement : executableElement.getParameters()) {
 
           String nameParameter = variableElement.getSimpleName().toString();
@@ -184,6 +186,9 @@ public class ControllersRound extends Round {
                   String.format("%s %s = (%s) ctx.bodyAsClass(%s.class);\n", typeParameter,
                       nameParameter, typeParameter, classParameter));
             }
+
+
+
           }
 
           Path path = variableElement.getAnnotation(Path.class);
@@ -225,14 +230,15 @@ public class ControllersRound extends Round {
 
         openApiStatements.add(
             String.format(
-                "openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %s, %s, %s);\n",
+                "openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %s, %s, %s, %s);\n",
                 endpointPath.toString(),
                 handlerType,
                 StringUtils.arrayToJavaCode(handlerRoles),
                 summary,
                 pathParameters.isEmpty() ? "Collections.emptyList()" : String.format("Arrays.asList(%s)", String.join(",", pathParameters)),
                 queryParameters.isEmpty() ? "Collections.emptyList()" : String.format("Arrays.asList(%s)", String.join(",", queryParameters)),
-                StringUtils.arrayToJavaCode(handlerTags)
+                StringUtils.arrayToJavaCode(handlerTags),
+                bodyParameter
         ));
       }
     }

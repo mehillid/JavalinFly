@@ -32,6 +32,7 @@ public class OpenApiTranslator {
   private final ObjectMapper MAPPER;
   private final LinkedHashMap<String, Path> path_mapped = new LinkedHashMap<>();
   private final LinkedHashMap<String, Tag> tags = new LinkedHashMap<>();
+  private final LinkedHashMap<String, Schema> schemas = new LinkedHashMap<>();
 
   public OpenApiTranslator() {
     MAPPER = new ObjectMapper();
@@ -41,7 +42,7 @@ public class OpenApiTranslator {
   }
 
   public void addPath(String path, String method, String[] roles, String summary,
-      List<String> pathParameters, List<String> queryParameters,  String[] pathTags) {
+      List<String> pathParameters, List<String> queryParameters,  String[] pathTags, @Nullable Schema body) {
 
     // ** start tags
     for(String tag : pathTags) {
@@ -135,7 +136,7 @@ public class OpenApiTranslator {
             new SecuritySchemes(
                 new BearerAuth("http", "bearer", "JWT")
             ),
-            Map.of()
+            schemas
         ))
         .paths(path_mapped)
         .tags(tags.values())
