@@ -22,8 +22,8 @@ public class JavalinFlyInjectorRound extends Round {
 
   public TypeMirror rolesTypeMirror;
   public Set<String> injectorRoles;
-
   public Element injectorElement;
+  public JavalinFlyInjector javalinFlyInjectorAnn;
 
   public JavalinFlyInjectorRound(MessagerRound messager, RoundEnvironment roundEnv,
       ProcessingEnvironment processingEnv) {
@@ -85,13 +85,13 @@ public class JavalinFlyInjectorRound extends Round {
       injectorRoles = new EnumUtils(processingEnv).getEnumConstants(rolesTypeMirror);
 
 
-      JavalinFlyInjector javalinFlyInjector = annotatedElement.getAnnotation(JavalinFlyInjector.class);
+      javalinFlyInjectorAnn = annotatedElement.getAnnotation(JavalinFlyInjector.class);
 
     }
   }
 
   @Override
   public boolean executed() {
-    return super.executed() && injectorRoles != null;
+    return super.executed() && injectorRoles != null && javalinFlyInjectorAnn != null;
   }
 }

@@ -73,20 +73,21 @@ public class GeneratorRound extends Round {
         "        JavalinFlyConfig config = new JavalinFlyConfig();\n" +
         "        configFun.accept(config);\n" +
         "        OpenApiTranslator openApiTranslator = new OpenApiTranslator();\n" +
-        "        System.out.println(openApiTranslator.asString(config.openapi, config.openapiServers));\n"
-        +
+//        "        System.out.println(openApiTranslator.asString(config.openapi, config.openapiServers));\n"
+
 
         String.join("", controllersRound.endpoints) +
         "    }\n" +
         "}\n";
 
+    var infoAnn = javalinFlyInjectorRound.javalinFlyInjectorAnn.info();
     messager.print(controllersRound.openApiTranslator.asString(new Info(
-        "My App",
-        "0.1",
+        infoAnn.title(),
+        infoAnn.version(),
         new Contact(
-            "API Support",
-            "https://www.wikipedia.com/",
-            "admin@domain.com"
+            infoAnn.contact().name(),
+            infoAnn.contact().url(),
+            infoAnn.contact().email()
         )
     ), Collections.emptyList()));
     try {

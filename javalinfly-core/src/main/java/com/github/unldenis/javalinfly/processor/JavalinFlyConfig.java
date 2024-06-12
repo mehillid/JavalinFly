@@ -15,17 +15,6 @@ public class JavalinFlyConfig {
 //    public Map<String, ? extends RouteRole> roles;
     public String pathPrefix = "";
 
-
-    public Info openapi = new Info(
-        "My App",
-        "0.1",
-        new Contact(
-            "API Support",
-            "https://www.wikipedia.com/",
-            "admin@domain.com"
-        )
-    );
-
     public List<Servers> openapiServers = Collections.emptyList();
 
 }
