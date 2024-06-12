@@ -16,4 +16,6 @@ public @interface Get {
 
   String summary() default "";
 
+  String[] tags() default {};
+
 }

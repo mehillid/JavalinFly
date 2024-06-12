@@ -15,4 +15,7 @@ public @interface Post {
   ResponseType responseType() default ResponseType.JSON;
 
   String summary() default "";
+
+  String[] tags() default {};
+
 }

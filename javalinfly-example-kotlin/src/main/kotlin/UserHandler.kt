@@ -7,12 +7,12 @@ import io.javalin.http.Context
 @Controller(path = "/user")
 class UserHandler {
 
-    @Post
+    @Post(tags = ["user"])
     fun createAll(ctx: Context, @Body users: Users): Response<Users, StandardError> {
         return ok(users)
     }
 
-    @Get(responseType = ResponseType.STRING)
+    @Get(responseType = ResponseType.STRING, tags = ["user"])
     fun getUser(ctx: Context, @Path id: String, @Query age: String?): Response<String, String> {
         return ok(String.format("id %s, age %s", id, age))
     }

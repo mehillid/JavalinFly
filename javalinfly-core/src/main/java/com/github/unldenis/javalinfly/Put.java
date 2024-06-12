@@ -16,4 +16,7 @@ public @interface Put {
 
   String summary() default "";
 
+  String[] tags() default {};
+
+
 }

@@ -12,6 +12,7 @@ import com.github.unldenis.javalinfly.Response;
 import com.github.unldenis.javalinfly.openapi.OpenApiTranslator;
 import com.github.unldenis.javalinfly.processor.Round;
 import com.github.unldenis.javalinfly.processor.utils.ProcessorUtil;
+import com.github.unldenis.javalinfly.processor.utils.StringUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -99,26 +100,31 @@ public class ControllersRound extends Round {
         String responseType = null;
         String[] handlerRoles;
         String summary;
+        String[] handlerTags = null;
         if (get != null) {
           handlerType = "GET";
           responseType = get.responseType().compiled();
           handlerRoles = get.roles();
           summary = get.summary();
+          handlerTags = get.tags();
         } else if (post != null) {
           handlerType = "POST";
           responseType = post.responseType().compiled();
           handlerRoles = post.roles();
           summary = post.summary();
+          handlerTags = post.tags();
         } else if (put != null) {
           handlerType = "PUT";
           responseType = put.responseType().compiled();
           handlerRoles = put.roles();
           summary = put.summary();
+          handlerTags = put.tags();
         } else if (delete != null) {
           handlerType = "DELETE";
           responseType = delete.responseType().compiled();
           handlerRoles = delete.roles();
           summary = delete.summary();
+          handlerTags = delete.tags();
         } else {
           return;
         }
@@ -215,20 +221,18 @@ public class ControllersRound extends Round {
                 "\n} " + rolesStr + ");\n"
         );
 
-        var roles = "new String[]{"+ Arrays.stream(handlerRoles).map(roleName -> "\"" + roleName + "\"").collect(Collectors.joining(",")) + "}";
-        if(handlerRoles.length == 0) {
-          roles = "new String[0]";
-        }
+
 
         openApiStatements.add(
             String.format(
-                "openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %s, %s);\n",
+                "openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %s, %s, %s);\n",
                 endpointPath.toString(),
                 handlerType,
-                roles,
+                StringUtils.arrayToJavaCode(handlerRoles),
                 summary,
                 pathParameters.isEmpty() ? "Collections.emptyList()" : String.format("Arrays.asList(%s)", String.join(",", pathParameters)),
-                queryParameters.isEmpty() ? "Collections.emptyList()" : String.format("Arrays.asList(%s)", String.join(",", queryParameters))
+                queryParameters.isEmpty() ? "Collections.emptyList()" : String.format("Arrays.asList(%s)", String.join(",", queryParameters)),
+                StringUtils.arrayToJavaCode(handlerTags)
         ));
       }
     }

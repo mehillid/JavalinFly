@@ -15,6 +15,4 @@ public @interface Controller {
 
   boolean includeApi() default true;
 
-  String[] tags() default {};
-
 }

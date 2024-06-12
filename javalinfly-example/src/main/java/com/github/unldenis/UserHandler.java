@@ -14,12 +14,12 @@ import java.util.List;
 //        return Response.err("this is my create error");
 //    }
 
-    @Post()
+    @Post(tags = {"user"})
     public Response<Users, StandardError> createAll(Context ctx, @Body Users users) {
         return Response.ok(users);
     }
 
-    @Get(responseType = ResponseType.STRING)
+    @Get(responseType = ResponseType.STRING, tags = "user")
     public Response<String, String> getUser(Context ctx, @Path String id, @Query String age) {
         return Response.ok(String.format("id %s, age %s", id, age));
     }

@@ -16,4 +16,6 @@ public @interface Delete {
 
   String summary() default "";
 
+  String[] tags() default {};
+
 }

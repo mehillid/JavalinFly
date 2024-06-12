@@ -1,5 +1,6 @@
 package com.github.unldenis.javalinfly.openapi.model;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -11,10 +12,10 @@ public class OpenApi {
   public final List<Security> security;
   public final Components components;
   public final LinkedHashMap<String, Path> paths;
-  public final List<Tag> tags;
+  public final Collection<Tag> tags;
 
   public OpenApi(String openapi, Info info, List<Servers> servers, List<Security> security,
-      Components components, LinkedHashMap<String, Path> paths, List<Tag> tags) {
+      Components components, LinkedHashMap<String, Path> paths, Collection<Tag> tags) {
     this.openapi = openapi;
     this.info = info;
     this.servers = servers;
@@ -39,7 +40,7 @@ public class OpenApi {
     private List<Security> security;
     private Components components;
     private LinkedHashMap<String, Path> paths;
-    private List<Tag> tags;
+    private Collection<Tag> tags;
 
     public Builder openapi(String openapi) {
       this.openapi = openapi;
@@ -71,7 +72,7 @@ public class OpenApi {
       return this;
     }
 
-    public Builder tags(List<Tag> tags) {
+    public Builder tags(Collection<Tag> tags) {
       this.tags = tags;
       return this;
     }
