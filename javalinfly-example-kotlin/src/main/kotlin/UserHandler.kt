@@ -1,20 +1,25 @@
 package com.github.unldenis
 
 import com.github.unldenis.javalinfly.*
-import com.github.unldenis.javalinfly.kotlin.ok
+import com.github.unldenis.javalinfly.kotlin.response
 import io.javalin.http.Context
 
 @Controller(path = "/user")
 class UserHandler {
 
     @Post(tags = ["user"])
-    fun createAll(ctx: Context, @Body users: Users): Response<Users, StandardError> {
-        return ok(users)
+    fun createAll(ctx: Context, @Body users: Users) = response<Users, StandardError> {
+        ok = Users()
     }
 
     @Get(responseType = ResponseType.STRING, tags = ["user"])
-    fun getUser(ctx: Context, @Path id: String, @Query age: String?): Response<String, String> {
-        return ok(String.format("id %s, age %s", id, age))
+    fun getUser(ctx: Context, @Path id: String, @Query age: String?) = response<String, String> {
+
+        if (age == null)
+            err = "age is missing"
+
+        ok = "id $id, age $age"
+
     }
 
     class Users {
