@@ -92,5 +92,12 @@ public final class ProcessorUtil {
     return declaredType.getTypeArguments();
   }
 
+  public @Nullable TypeElement getExtracted(Types typeUtils, VariableElement ve) {
+    TypeMirror typeMirror = ve.asType();
+    Element element = typeUtils.asElement(typeMirror);
 
+    // instanceof implies null-ckeck
+    return (element instanceof TypeElement)
+        ? (TypeElement)element : null;
+  }
 }

@@ -62,7 +62,7 @@ public class JavalinFlyProcessor extends AbstractProcessor {
     }
 
     if(controllersRound == null) {
-      controllersRound = new ControllersRound(messagerRound, roundEnv,
+      controllersRound = new ControllersRound(typeUtils, elementUtils, messagerRound, roundEnv,
           javalinFlyInjectorRound.rolesTypeMirror);
     }
     controllersRound.execute();

@@ -1,5 +1,9 @@
 package com.github.unldenis.javalinfly.processor.round;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.unldenis.javalinfly.Body;
 import com.github.unldenis.javalinfly.Controller;
 import com.github.unldenis.javalinfly.Delete;
@@ -10,12 +14,14 @@ import com.github.unldenis.javalinfly.Put;
 import com.github.unldenis.javalinfly.Query;
 import com.github.unldenis.javalinfly.Response;
 import com.github.unldenis.javalinfly.openapi.OpenApiTranslator;
+import com.github.unldenis.javalinfly.openapi.OpenApiUtil;
 import com.github.unldenis.javalinfly.openapi.model.Schema;
 import com.github.unldenis.javalinfly.processor.Round;
 import com.github.unldenis.javalinfly.processor.utils.ProcessorUtil;
 import com.github.unldenis.javalinfly.processor.utils.StringUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,14 +37,19 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ControllersRound extends Round {
+
+  private final Types typeUtils;
+  private final Elements elementUtils;
+
   private final MessagerRound messager;
   private final RoundEnvironment roundEnv;
   private final TypeMirror rolesTypeMirror;
-
 
 
   public Map<String, ExecutableElement> selectedRoles = new HashMap<>();
@@ -49,8 +60,11 @@ public class ControllersRound extends Round {
   public final List<String> openApiStatements = new ArrayList<>();
 
 
-  public ControllersRound(MessagerRound messager, RoundEnvironment roundEnv,
+  public ControllersRound(Types typeUtils, Elements elementUtils, MessagerRound messager,
+      RoundEnvironment roundEnv,
       TypeMirror rolesTypeMirror) {
+    this.typeUtils = typeUtils;
+    this.elementUtils = elementUtils;
     this.messager = messager;
     this.roundEnv = roundEnv;
     this.rolesTypeMirror = rolesTypeMirror;
@@ -59,6 +73,9 @@ public class ControllersRound extends Round {
 
   @Override
   protected void run() {
+    Map<String, Schema> schemaMap = new HashMap<>();
+    OpenApiUtil openApiUtil = new OpenApiUtil(typeUtils, elementUtils, messager);
+
     Set<? extends Element> controllers = roundEnv.getElementsAnnotatedWith(Controller.class);
 
     // Iterate over all @Controller annotated elements
@@ -130,13 +147,11 @@ public class ControllersRound extends Round {
           return;
         }
 
-
-
         String returnType = executableElement.getReturnType().toString();
         if (executableElement.getReturnType().getKind() != TypeKind.DECLARED
             || !returnType.startsWith(Response.class.getName())) {
           messager.error(executableElement, "Endpoint method must return a Response");
-          return ;
+          return;
         }
 
         String rolesStr = "";
@@ -162,7 +177,9 @@ public class ControllersRound extends Round {
 
         List<String> pathParameters = new ArrayList<>();
         List<String> queryParameters = new ArrayList<>();
-        String bodyParameter = "null";
+
+        String bodySchema = null;
+
         for (VariableElement variableElement : executableElement.getParameters()) {
 
           String nameParameter = variableElement.getSimpleName().toString();
@@ -176,7 +193,8 @@ public class ControllersRound extends Round {
 
             if (body.customType()) {
               if (!typeParameter.equals(String.class.getName())) {
-                messager.error(variableElement, "Body parameter '%s' must be a String since is customType",
+                messager.error(variableElement,
+                    "Body parameter '%s' must be a String since is customType",
                     nameParameter);
                 return;
               }
@@ -185,8 +203,19 @@ public class ControllersRound extends Round {
               parametersDecl.add(
                   String.format("%s %s = (%s) ctx.bodyAsClass(%s.class);\n", typeParameter,
                       nameParameter, typeParameter, classParameter));
-            }
 
+              // openapi
+              TypeElement typeBodyName = ProcessorUtil.asTypeElement(typeUtils,
+                  variableElement.asType());
+              Schema schema = openApiUtil.classToSchema(schemaMap,
+                  variableElement.asType(),
+                  endpointPath.toString(), true);
+
+              bodySchema = typeBodyName.getSimpleName().toString();
+              schemaMap.put(bodySchema, schema);
+
+
+            }
 
 
           }
@@ -226,23 +255,34 @@ public class ControllersRound extends Round {
                 "\n} " + rolesStr + ");\n"
         );
 
-
-
         openApiStatements.add(
             String.format(
-                "openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %s, %s, %s, %s);\n",
+                "openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %s, %s, %s, \"%s\");\n",
                 endpointPath.toString(),
                 handlerType,
                 StringUtils.arrayToJavaCode(handlerRoles),
                 summary,
-                pathParameters.isEmpty() ? "Collections.emptyList()" : String.format("Arrays.asList(%s)", String.join(",", pathParameters)),
-                queryParameters.isEmpty() ? "Collections.emptyList()" : String.format("Arrays.asList(%s)", String.join(",", queryParameters)),
+                pathParameters.isEmpty() ? "Collections.emptyList()"
+                    : String.format("Arrays.asList(%s)", String.join(",", pathParameters)),
+                queryParameters.isEmpty() ? "Collections.emptyList()"
+                    : String.format("Arrays.asList(%s)", String.join(",", queryParameters)),
                 StringUtils.arrayToJavaCode(handlerTags),
-                bodyParameter
-        ));
+                /*body*/ bodySchema
+            ));
       }
     }
+
+    var MAPPER = new ObjectMapper();
+    MAPPER.setSerializationInclusion(Include.NON_NULL);
+    try {
+      String schemasEncoded = Base64.getEncoder()
+          .encodeToString(MAPPER.writeValueAsString(schemaMap).getBytes());
+      openApiStatements.add(0, "openApiTranslator.decodeSchemas(\"" + schemasEncoded + "\");\n");
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
   }
+
   private @Nullable String registerConstructors(@NotNull TypeElement classTree) {
     for (var member : classTree.getEnclosedElements()) {
       if (!(member instanceof ExecutableElement)) {

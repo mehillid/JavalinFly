@@ -3,6 +3,7 @@ package com.github.unldenis.javalinfly.openapi;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.unldenis.javalinfly.openapi.model.Components;
@@ -12,14 +13,19 @@ import com.github.unldenis.javalinfly.openapi.model.Info;
 import com.github.unldenis.javalinfly.openapi.model.Info.Contact;
 import com.github.unldenis.javalinfly.openapi.model.OpenApi;
 import com.github.unldenis.javalinfly.openapi.model.Path;
+import com.github.unldenis.javalinfly.openapi.model.Path.Content;
+import com.github.unldenis.javalinfly.openapi.model.Path.Content.ContentJson;
 import com.github.unldenis.javalinfly.openapi.model.Path.PathMethod;
 import com.github.unldenis.javalinfly.openapi.model.Path.PathMethod.Parameter;
+import com.github.unldenis.javalinfly.openapi.model.Path.PathMethod.RequestBody;
 import com.github.unldenis.javalinfly.openapi.model.Schema;
 import com.github.unldenis.javalinfly.openapi.model.Security;
 import com.github.unldenis.javalinfly.openapi.model.Servers;
 import com.github.unldenis.javalinfly.openapi.model.Tag;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,7 +38,7 @@ public class OpenApiTranslator {
   private final ObjectMapper MAPPER;
   private final LinkedHashMap<String, Path> path_mapped = new LinkedHashMap<>();
   private final LinkedHashMap<String, Tag> tags = new LinkedHashMap<>();
-  private final LinkedHashMap<String, Schema> schemas = new LinkedHashMap<>();
+  private LinkedHashMap<String, Schema> schemas = new LinkedHashMap<>();
 
   public OpenApiTranslator() {
     MAPPER = new ObjectMapper();
@@ -41,8 +47,18 @@ public class OpenApiTranslator {
 
   }
 
+  public void decodeSchemas(String schemasEncoded) {
+    try {
+      TypeReference<LinkedHashMap<String, Schema>> typeRef = new TypeReference<>() {};
+
+      schemas = MAPPER.readValue(new String(Base64.getDecoder().decode(schemasEncoded)), typeRef);
+    } catch (JsonProcessingException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
   public void addPath(String path, String method, String[] roles, String summary,
-      List<String> pathParameters, List<String> queryParameters,  String[] pathTags, @Nullable Schema body) {
+      List<String> pathParameters, List<String> queryParameters,  String[] pathTags, @Nullable String bodySchema) {
 
     // ** start tags
     for(String tag : pathTags) {
@@ -88,6 +104,12 @@ public class OpenApiTranslator {
       Parameter parameter = new Parameter(queryParam,Schema.builder().type("string").build());
       parameter.in = "query";
       cachedPathMethod.parameters.add(parameter);
+    }
+
+
+    if(bodySchema != null) {
+      cachedPathMethod.requestBody = new RequestBody(new Content());
+      cachedPathMethod.requestBody.content.applicationJson = new ContentJson(schemas.get(bodySchema));
     }
 
     switch (method) {
