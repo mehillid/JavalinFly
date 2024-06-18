@@ -9,9 +9,8 @@ public class Hello {
     public Hello() {}
 
     @Get(responseType = ResponseType.STRING, roles = {"USER", "ADMIN"})
-    public Response<String, String> main(Context ctx) {
-
-        return Response.ok("hello");
+    public SuccessResponse<String> main(Context ctx) {
+        return SuccessResponse.ok();
     }
 
 

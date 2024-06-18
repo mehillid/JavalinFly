@@ -11,7 +11,7 @@ public enum ResponseType {
           ""
   ),
   STRING(
-          "if(response.isErr()) { ctx.status(404).result((String) response.unwrapErr()); }else{ ctx.result(response.unwrap()); }"
+          "if(response.isErr()) { ctx.status(404).result((String) response.unwrapErr()); }else{ ctx.result((String) response.unwrap()); }"
   );
 
   private final String compiled;

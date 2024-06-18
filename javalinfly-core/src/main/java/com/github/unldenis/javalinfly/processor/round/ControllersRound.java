@@ -15,6 +15,7 @@ import com.github.unldenis.javalinfly.Put;
 import com.github.unldenis.javalinfly.Query;
 import com.github.unldenis.javalinfly.Response;
 import com.github.unldenis.javalinfly.ResponseType;
+import com.github.unldenis.javalinfly.SuccessResponse;
 import com.github.unldenis.javalinfly.openapi.OpenApiTranslator;
 import com.github.unldenis.javalinfly.openapi.OpenApiUtil;
 import com.github.unldenis.javalinfly.openapi.model.Schema;
@@ -78,6 +79,7 @@ public class ControllersRound extends Round {
   protected void run() {
     Map<String, Schema> schemaMap = new HashMap<>();
     schemaMap.put("CustomType", Schema.builder().type("string").build());
+    schemaMap.put("SuccessResponse", Schema.builder().type("object").build());
 
     OpenApiUtil openApiUtil = new OpenApiUtil(typeUtils, elementUtils, messager);
 
@@ -190,28 +192,25 @@ public class ControllersRound extends Round {
 
         TypeMirror returnType = executableElement.getReturnType();
         TypeElement returnTypeElement = ProcessorUtil.asTypeElement(typeUtils, returnType);
-        if (executableElement.getReturnType().getKind() != TypeKind.DECLARED
-            || !returnTypeElement.getQualifiedName().toString().equals(Response.class.getName())) {
-          messager.error(executableElement, "Endpoint method must return a Response");
-          return;
-        }
-        var returnTypeGeneric = ProcessorUtil.getGenericTypes(returnType);
-        TypeMirror returnTypeOk = returnTypeGeneric.get(0);
-        TypeMirror returnTypeErr = returnTypeGeneric.get(1);
 
-        switch (handlerResponseType) {
-          case JSON:
-            if(returnTypeOk.getKind() != TypeKind.DECLARED  || returnTypeOk.toString().startsWith("java.lang.")) {
-              messager.error(executableElement, "Endpoint method must return a valid success object");
-              return;
-            }
-            if(returnTypeErr.getKind() != TypeKind.DECLARED || returnTypeErr.toString().startsWith("java.lang.")) {
-              messager.error(executableElement, "Endpoint method must return a valid error object");
-              return;
-            }
-            // openapi
+        if(returnTypeElement.getQualifiedName().toString().equals(Response.class.getName())) {
+          var returnTypeGeneric = ProcessorUtil.getGenericTypes(returnType);
+          TypeMirror returnTypeOk = returnTypeGeneric.get(0);
+          TypeMirror returnTypeErr = returnTypeGeneric.get(1);
 
-            // ok
+          switch (handlerResponseType) {
+            case JSON:
+              if(returnTypeOk.getKind() != TypeKind.DECLARED  || returnTypeOk.toString().startsWith("java.lang.")) {
+                messager.error(executableElement, "Endpoint method must return a valid success object");
+                return;
+              }
+              if(returnTypeErr.getKind() != TypeKind.DECLARED || returnTypeErr.toString().startsWith("java.lang.")) {
+                messager.error(executableElement, "Endpoint method must return a valid error object");
+                return;
+              }
+              // openapi
+
+              // ok
             {
               TypeElement typeOk = ProcessorUtil.asTypeElement(typeUtils, returnTypeOk);
               var schema = openApiUtil.classToSchema(schemaMap,
@@ -230,17 +229,64 @@ public class ControllersRound extends Round {
             }
 
             break;
-          case HTML:
-          case STRING:
-            if(!returnTypeOk.toString().equals(String.class.getName()) || !returnTypeErr.toString().equals(String.class.getName())) {
-              messager.error(executableElement, "Endpoint method must return a Response<String, String>");
+            case HTML:
+            case STRING:
+              if(!returnTypeOk.toString().equals(String.class.getName()) || !returnTypeErr.toString().equals(String.class.getName())) {
+                messager.error(executableElement, "Endpoint method must return a Response<String, String>");
+                return;
+              }
+              break;
+            case FILE:
+              messager.error(executableElement, "File response is not implemented yet");
               return;
+          }
+        } else if(returnTypeElement.getQualifiedName().toString().equals(SuccessResponse.class.getName())) {
+          var returnTypeGeneric = ProcessorUtil.getGenericTypes(returnType);
+          TypeMirror returnTypeErr = returnTypeGeneric.get(0);
+
+          switch (handlerResponseType) {
+            case JSON:
+              if(returnTypeErr.getKind() != TypeKind.DECLARED || returnTypeErr.toString().startsWith("java.lang.")) {
+                messager.error(executableElement, "Endpoint method must return a valid error object");
+                return;
+              }
+              // openapi
+
+              // ok
+            {
+              returnOkSchema = "SuccessResponse";
             }
+
+            // err
+            {
+              TypeElement typeErr = ProcessorUtil.asTypeElement(typeUtils, returnTypeErr);
+              var schema = openApiUtil.classToSchema(schemaMap,
+                  returnTypeErr, endpointPath.toString(), true, true);
+
+              returnErrSchema = typeErr.getSimpleName().toString();
+            }
+
             break;
-          case FILE:
-            messager.error(executableElement, "File response is not implemented yet");
-            return;
+            case HTML:
+            case STRING:
+              if(!returnTypeErr.toString().equals(String.class.getName())) {
+                messager.error(executableElement, "Endpoint method must return a SuccessResponse<String>");
+                return;
+              }
+              break;
+            case FILE:
+              messager.error(executableElement, "File response is not implemented yet");
+              return;
+          }
+        } else {
+          messager.error(executableElement, "Endpoint method must return a Response or SuccessResponse");
+          return;
         }
+
+//        if (executableElement.getReturnType().getKind() != TypeKind.DECLARED
+//            || !returnTypeElement.getQualifiedName().toString().equals(Response.class.getName())) {
+//        }
+
 
 
         for (VariableElement variableElement : executableElement.getParameters()) {
