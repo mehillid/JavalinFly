@@ -2,6 +2,7 @@ package com.github.unldenis.javalinfly.processor.round;
 
 import com.github.unldenis.javalinfly.JavalinFly;
 import com.github.unldenis.javalinfly.JavalinFlyInjector;
+import com.github.unldenis.javalinfly.ResponseType;
 import com.github.unldenis.javalinfly.Vars;
 import com.github.unldenis.javalinfly.openapi.OpenApiTranslator;
 import com.github.unldenis.javalinfly.openapi.SwaggerUIHtmlGenerator;
@@ -77,6 +78,7 @@ public class GeneratorRound extends Round {
         addClassImport(SwaggerUIHtmlGenerator.class) +
         addClassImport(OpenApi.class) +
         addClassImport(Vars.class) +
+        addClassImport(ResponseType.class) +
 
         "import io.javalin.Javalin;\n" +
         "import io.javalin.http.HandlerType;\n" +

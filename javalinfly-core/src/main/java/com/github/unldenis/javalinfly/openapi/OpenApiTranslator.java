@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.github.unldenis.javalinfly.ResponseType;
 import com.github.unldenis.javalinfly.openapi.model.Components;
 import com.github.unldenis.javalinfly.openapi.model.Components.SecuritySchemes;
 import com.github.unldenis.javalinfly.openapi.model.Components.SecuritySchemes.BearerAuth;
@@ -18,6 +19,7 @@ import com.github.unldenis.javalinfly.openapi.model.Path.Content.ContentJson;
 import com.github.unldenis.javalinfly.openapi.model.Path.PathMethod;
 import com.github.unldenis.javalinfly.openapi.model.Path.PathMethod.Parameter;
 import com.github.unldenis.javalinfly.openapi.model.Path.PathMethod.RequestBody;
+import com.github.unldenis.javalinfly.openapi.model.Path.PathMethod.Response;
 import com.github.unldenis.javalinfly.openapi.model.Schema;
 import com.github.unldenis.javalinfly.openapi.model.Security;
 import com.github.unldenis.javalinfly.openapi.model.Servers;
@@ -31,6 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.checkerframework.checker.units.qual.N;
 import org.jetbrains.annotations.Nullable;
 
 public class OpenApiTranslator {
@@ -49,7 +52,8 @@ public class OpenApiTranslator {
 
   public void decodeSchemas(String schemasEncoded) {
     try {
-      TypeReference<LinkedHashMap<String, Schema>> typeRef = new TypeReference<>() {};
+      TypeReference<LinkedHashMap<String, Schema>> typeRef = new TypeReference<>() {
+      };
 
       schemas = MAPPER.readValue(new String(Base64.getDecoder().decode(schemasEncoded)), typeRef);
     } catch (JsonProcessingException e) {
@@ -58,23 +62,24 @@ public class OpenApiTranslator {
   }
 
   public void addPath(String path, String method, String[] roles, String summary,
-      List<String> pathParameters, List<String> queryParameters,  String[] pathTags, @Nullable String bodySchema) {
+      List<String> pathParameters, List<String> queryParameters, String[] pathTags,
+      @Nullable String bodySchema, @Nullable String responseOkSchema,
+      @Nullable String responseErrSchema, ResponseType responseType) {
 
     // ** start tags
-    for(String tag : pathTags) {
-      if(!tags.containsKey(tag)) {
+    for (String tag : pathTags) {
+      if (!tags.containsKey(tag)) {
         Tag tagModel = new Tag(tag);
         tags.put(tag, tagModel);
       }
     }
     // ** end tags
 
-
     Path cachedPath = path_mapped.getOrDefault(path, new Path());
     PathMethod cachedPathMethod = new Path.PathMethod();
 
     // description
-    String description = roles.length == 0  ? null : "Limited to " + String.join(" or ", roles);
+    String description = roles.length == 0 ? null : "Limited to " + String.join(" or ", roles);
     // end description
 
     cachedPathMethod.summary = summary;
@@ -84,33 +89,84 @@ public class OpenApiTranslator {
 
     int parametersAmount = 0;
     for (String pathParam : pathParameters) {
-      if(parametersAmount == 0) {
+      if (parametersAmount == 0) {
         cachedPathMethod.parameters = new ArrayList<>();
         parametersAmount++;
       }
 
-      Parameter parameter = new Parameter(pathParam,Schema.builder().type("string").build());
+      Parameter parameter = new Parameter(pathParam, Schema.builder().type("string").build());
       parameter.in = "path";
       parameter.required = true;
       cachedPathMethod.parameters.add(parameter);
     }
 
     for (String queryParam : queryParameters) {
-      if(parametersAmount == 0) {
+      if (parametersAmount == 0) {
         cachedPathMethod.parameters = new ArrayList<>();
         parametersAmount++;
       }
 
-      Parameter parameter = new Parameter(queryParam,Schema.builder().type("string").build());
+      Parameter parameter = new Parameter(queryParam, Schema.builder().type("string").build());
       parameter.in = "query";
       cachedPathMethod.parameters.add(parameter);
     }
 
-
-    if(bodySchema != null) {
+    if (bodySchema != null) {
       cachedPathMethod.requestBody = new RequestBody(new Content());
-      cachedPathMethod.requestBody.content.applicationJson = new ContentJson(schemas.get(bodySchema));
+      cachedPathMethod.requestBody.content.applicationJson = new ContentJson(
+          schemas.get(bodySchema));
     }
+
+    switch (responseType) {
+      case JSON:
+        if (responseOkSchema != null) {
+          var success = new Response(
+              "Success response"
+          );
+          success.content = new Content();
+          success.content.applicationJson = new ContentJson(schemas.get(responseOkSchema));
+
+          cachedPathMethod.responses.put("200", success);
+        }
+
+        if (responseErrSchema != null) {
+          var success = new Response(
+              "Error response"
+          );
+          success.content = new Content();
+          success.content.applicationJson = new ContentJson(schemas.get(responseErrSchema));
+
+          cachedPathMethod.responses.put("400", success);
+        }
+        break;
+      case HTML:
+        break;
+      case FILE:
+        break;
+      case STRING:
+
+        {
+          var success = new Response(
+              "Success response"
+          );
+          success.content = new Content();
+          success.content.applicationJson = new ContentJson(Schema.builder().type("string").build());
+
+          cachedPathMethod.responses.put("200", success);
+        }
+
+        {
+          var success = new Response(
+              "Error response"
+          );
+          success.content = new Content();
+          success.content.applicationJson = new ContentJson(Schema.builder().type("string").build());
+
+          cachedPathMethod.responses.put("400", success);
+        }
+        break;
+    }
+
 
     switch (method) {
       case "GET": {
@@ -130,7 +186,8 @@ public class OpenApiTranslator {
         break;
       }
       default: {
-        throw new IllegalStateException(String.format("invalid method %s of path %s", method, path));
+        throw new IllegalStateException(
+            String.format("invalid method %s of path %s", method, path));
       }
     }
 
@@ -140,7 +197,7 @@ public class OpenApiTranslator {
   }
 
 
-  public OpenApi build()  {
+  public OpenApi build() {
     return OpenApi.builder()
         .openapi("3.0.3")
         .info(new Info(

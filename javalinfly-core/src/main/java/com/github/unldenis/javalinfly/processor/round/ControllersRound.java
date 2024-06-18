@@ -157,39 +157,7 @@ public class ControllersRound extends Round {
           return;
         }
 
-        TypeMirror returnType = executableElement.getReturnType();
-        TypeElement returnTypeElement = ProcessorUtil.asTypeElement(typeUtils, returnType);
-        if (executableElement.getReturnType().getKind() != TypeKind.DECLARED
-            || !returnTypeElement.getQualifiedName().toString().equals(Response.class.getName())) {
-          messager.error(executableElement, "Endpoint method must return a Response");
-          return;
-        }
-        var returnTypeGeneric = ProcessorUtil.getGenericTypes(returnType);
-        TypeMirror returnTypeOk = returnTypeGeneric.get(0);
-        TypeMirror returnTypeErr = returnTypeGeneric.get(1);
 
-        switch (handlerResponseType) {
-          case JSON:
-            if(returnTypeOk.getKind() != TypeKind.DECLARED  || returnTypeOk.toString().startsWith("java.lang.")) {
-              messager.error(executableElement, "Endpoint method must return a valid success object");
-              return;
-            }
-            if(returnTypeErr.getKind() != TypeKind.DECLARED || returnTypeErr.toString().startsWith("java.lang.")) {
-              messager.error(executableElement, "Endpoint method must return a valid error object");
-              return;
-            }
-            break;
-          case HTML:
-          case STRING:
-            if(!returnTypeOk.toString().equals(String.class.getName()) || !returnTypeErr.toString().equals(String.class.getName())) {
-              messager.error(executableElement, "Endpoint method must return a Response<String, String>");
-              return;
-            }
-            break;
-          case FILE:
-            messager.error(executableElement, "File response is not implemented yet");
-            return;
-        }
 
         String rolesStr = "";
         if (handlerRoles.length > 0) {
@@ -219,6 +187,60 @@ public class ControllersRound extends Round {
         String returnOkSchema = null;
         String returnErrSchema = null;
 
+
+        TypeMirror returnType = executableElement.getReturnType();
+        TypeElement returnTypeElement = ProcessorUtil.asTypeElement(typeUtils, returnType);
+        if (executableElement.getReturnType().getKind() != TypeKind.DECLARED
+            || !returnTypeElement.getQualifiedName().toString().equals(Response.class.getName())) {
+          messager.error(executableElement, "Endpoint method must return a Response");
+          return;
+        }
+        var returnTypeGeneric = ProcessorUtil.getGenericTypes(returnType);
+        TypeMirror returnTypeOk = returnTypeGeneric.get(0);
+        TypeMirror returnTypeErr = returnTypeGeneric.get(1);
+
+        switch (handlerResponseType) {
+          case JSON:
+            if(returnTypeOk.getKind() != TypeKind.DECLARED  || returnTypeOk.toString().startsWith("java.lang.")) {
+              messager.error(executableElement, "Endpoint method must return a valid success object");
+              return;
+            }
+            if(returnTypeErr.getKind() != TypeKind.DECLARED || returnTypeErr.toString().startsWith("java.lang.")) {
+              messager.error(executableElement, "Endpoint method must return a valid error object");
+              return;
+            }
+            // openapi
+
+            // ok
+            {
+              TypeElement typeOk = ProcessorUtil.asTypeElement(typeUtils, returnTypeOk);
+              var schema = openApiUtil.classToSchema(schemaMap,
+                  returnTypeOk, endpointPath.toString(), true, true);
+
+              returnOkSchema = typeOk.getSimpleName().toString();
+            }
+
+            // err
+            {
+              TypeElement typeErr = ProcessorUtil.asTypeElement(typeUtils, returnTypeErr);
+              var schema = openApiUtil.classToSchema(schemaMap,
+                  returnTypeErr, endpointPath.toString(), true, true);
+
+              returnErrSchema = typeErr.getSimpleName().toString();
+            }
+
+            break;
+          case HTML:
+          case STRING:
+            if(!returnTypeOk.toString().equals(String.class.getName()) || !returnTypeErr.toString().equals(String.class.getName())) {
+              messager.error(executableElement, "Endpoint method must return a Response<String, String>");
+              return;
+            }
+            break;
+          case FILE:
+            messager.error(executableElement, "File response is not implemented yet");
+            return;
+        }
 
 
         for (VariableElement variableElement : executableElement.getParameters()) {
@@ -253,10 +275,9 @@ public class ControllersRound extends Round {
                   variableElement.asType());
               Schema schema = openApiUtil.classToSchema(schemaMap,
                   variableElement.asType(),
-                  endpointPath.toString(), true);
+                  endpointPath.toString(), true, true);
 
               bodySchema = typeBodyName.getSimpleName().toString();
-              schemaMap.put(bodySchema, schema);
 
             }
 
@@ -302,7 +323,7 @@ public class ControllersRound extends Round {
 
         openApiStatements.add(
             String.format(
-                "openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %s, %s, %s, %s);\n",
+                "            openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %s, %s, %s, %s, %s, %s, ResponseType.%s);\n",
                 endpointPath.toString(),
                 handlerType,
                 StringUtils.arrayToJavaCode(handlerRoles),
@@ -312,7 +333,10 @@ public class ControllersRound extends Round {
                 queryParameters.isEmpty() ? "Collections.emptyList()"
                     : String.format("Arrays.asList(%s)", String.join(",", queryParameters)),
                 StringUtils.arrayToJavaCode(handlerTags),
-                /*body*/ bodySchema == null ? null : "\"" + bodySchema + "\""
+                /*body*/ bodySchema == null ? null : "\"" + bodySchema + "\"",
+                /* ok */ returnOkSchema == null ? null : "\"" + returnOkSchema + "\"",
+                /* err */ returnErrSchema == null ? null : "\"" + returnErrSchema + "\"",
+                handlerResponseType.name()
             ));
       }
     }
@@ -322,7 +346,7 @@ public class ControllersRound extends Round {
     try {
       String schemasEncoded = Base64.getEncoder()
           .encodeToString(MAPPER.writeValueAsString(schemaMap).getBytes());
-      openApiStatements.add(0, "openApiTranslator.decodeSchemas(\"" + schemasEncoded + "\");\n");
+      openApiStatements.add(0, "            openApiTranslator.decodeSchemas(\"" + schemasEncoded + "\");\n");
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }

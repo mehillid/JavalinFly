@@ -19,9 +19,9 @@ import java.util.List;
         return Response.ok(users);
     }
 
-    @Get(responseType = ResponseType.STRING, tags = "user")
-    public Response<String, String> getUser(Context ctx, @Path String id, @Query String age) {
-        return Response.ok(String.format("id %s, age %s", id, age));
+    @Get(tags = "user")
+    public Response<User, StandardError> getUser(Context ctx, @Path String id, @Query String age) {
+        return Response.ok(new User("denis", 2));
     }
 
     public static class Users {

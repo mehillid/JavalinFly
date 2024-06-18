@@ -35,7 +35,7 @@ public class OpenApiUtil {
   }
 
   public Schema classToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path,
-      boolean request) {
+      boolean request, boolean createSchema) {
 
     Element element = ProcessorUtil.asTypeElement(typeUtils, typeMirror);
 
@@ -51,13 +51,17 @@ public class OpenApiUtil {
 
     DeclaredType declaredType = (DeclaredType) typeMirror;
     TypeElement classElement = (TypeElement) declaredType.asElement();
-    String nameClass = classElement.getSimpleName().toString();
 
+    Schema schema = new Schema();
+
+    String nameClass = classElement.getSimpleName().toString();
     if (schemas.containsKey(nameClass)) {
       return Schema.builder().$ref(Schema.schemaRef(nameClass)).build();
     }
+    if (createSchema) {
+      schemas.put(nameClass, schema);
+    }
 
-    Schema schema = new Schema();
     schema.description = "A JSON object containing a generic class information";
 
     if (isCollection(classElement)) {
@@ -66,7 +70,7 @@ public class OpenApiUtil {
       if (genericListType != null) {
         Element genericElement = typeUtils.asElement(genericListType);
         messager.warning("Generic mirror %s, element %s", genericListType, genericElement);
-        schema.items = classToSchema(schemas, genericListType, path, request);
+        schema.items = classToSchema(schemas, genericListType, path, request, false);
       } else {
         schema.items = Schema.builder().type("object").description("Unknown type").build();
       }
@@ -80,7 +84,7 @@ public class OpenApiUtil {
       if (!keyType.toString().equals("java.lang.String")) {
         throw new IllegalStateException("Invalid map at path " + path + ", key must be a String");
       }
-      schema.additionalProperties = classToSchema(schemas, valueType, path, request);
+      schema.additionalProperties = classToSchema(schemas, valueType, path, request, false);
       return schema;
     } else {
       schema.type = "object";
@@ -161,7 +165,7 @@ public class OpenApiUtil {
             return Schema.builder().type("string")
                 ._enum(getEnumValues((TypeElement) returnTypeElement)).build();
           } else {
-            return classToSchema(schemas, typeMirror, path, request);
+            return classToSchema(schemas, typeMirror, path, request,false);
           }
         }
       default:

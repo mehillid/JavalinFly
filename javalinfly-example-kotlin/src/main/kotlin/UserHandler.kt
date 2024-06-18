@@ -8,7 +8,7 @@ import io.javalin.http.Context
 class UserHandler {
 
     @Post(tags = ["user"])
-    fun createAll(ctx: Context, @Body users: Users): Response<Users, String> {
+    fun createAll(ctx: Context, @Body users: Users): Response<Users, StandardError> {
         return ok(users)
     }
 
