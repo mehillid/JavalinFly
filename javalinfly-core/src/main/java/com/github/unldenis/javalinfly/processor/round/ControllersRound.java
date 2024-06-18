@@ -1,5 +1,6 @@
 package com.github.unldenis.javalinfly.processor.round;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -74,6 +75,8 @@ public class ControllersRound extends Round {
   @Override
   protected void run() {
     Map<String, Schema> schemaMap = new HashMap<>();
+    schemaMap.put("CustomType", Schema.builder().type("string").build());
+
     OpenApiUtil openApiUtil = new OpenApiUtil(typeUtils, elementUtils, messager);
 
     Set<? extends Element> controllers = roundEnv.getElementsAnnotatedWith(Controller.class);
@@ -199,6 +202,9 @@ public class ControllersRound extends Round {
                 return;
               }
               parametersDecl.add(String.format("String %s = ctx.body();\n", nameParameter));
+
+              // openapi
+              bodySchema = "CustomType";
             } else {
               parametersDecl.add(
                   String.format("%s %s = (%s) ctx.bodyAsClass(%s.class);\n", typeParameter,
@@ -213,7 +219,6 @@ public class ControllersRound extends Round {
 
               bodySchema = typeBodyName.getSimpleName().toString();
               schemaMap.put(bodySchema, schema);
-
 
             }
 
@@ -257,7 +262,7 @@ public class ControllersRound extends Round {
 
         openApiStatements.add(
             String.format(
-                "openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %s, %s, %s, \"%s\");\n",
+                "openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %s, %s, %s, %s);\n",
                 endpointPath.toString(),
                 handlerType,
                 StringUtils.arrayToJavaCode(handlerRoles),
@@ -267,7 +272,7 @@ public class ControllersRound extends Round {
                 queryParameters.isEmpty() ? "Collections.emptyList()"
                     : String.format("Arrays.asList(%s)", String.join(",", queryParameters)),
                 StringUtils.arrayToJavaCode(handlerTags),
-                /*body*/ bodySchema
+                /*body*/ bodySchema == null ? null : "\"" + bodySchema + "\""
             ));
       }
     }
