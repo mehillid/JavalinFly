@@ -14,6 +14,7 @@ import com.github.unldenis.javalinfly.Post;
 import com.github.unldenis.javalinfly.Put;
 import com.github.unldenis.javalinfly.Query;
 import com.github.unldenis.javalinfly.Response;
+import com.github.unldenis.javalinfly.ResponseType;
 import com.github.unldenis.javalinfly.openapi.OpenApiTranslator;
 import com.github.unldenis.javalinfly.openapi.OpenApiUtil;
 import com.github.unldenis.javalinfly.openapi.model.Schema;
@@ -36,6 +37,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -122,26 +124,31 @@ public class ControllersRound extends Round {
         String[] handlerRoles;
         String summary;
         String[] handlerTags = null;
+        ResponseType handlerResponseType = null;
         if (get != null) {
           handlerType = "GET";
+          handlerResponseType = get.responseType();
           responseType = get.responseType().compiled();
           handlerRoles = get.roles();
           summary = get.summary();
           handlerTags = get.tags();
         } else if (post != null) {
           handlerType = "POST";
+          handlerResponseType = post.responseType();
           responseType = post.responseType().compiled();
           handlerRoles = post.roles();
           summary = post.summary();
           handlerTags = post.tags();
         } else if (put != null) {
           handlerType = "PUT";
+          handlerResponseType = put.responseType();
           responseType = put.responseType().compiled();
           handlerRoles = put.roles();
           summary = put.summary();
           handlerTags = put.tags();
         } else if (delete != null) {
           handlerType = "DELETE";
+          handlerResponseType = delete.responseType();
           responseType = delete.responseType().compiled();
           handlerRoles = delete.roles();
           summary = delete.summary();
@@ -150,11 +157,38 @@ public class ControllersRound extends Round {
           return;
         }
 
-        String returnType = executableElement.getReturnType().toString();
+        TypeMirror returnType = executableElement.getReturnType();
+        TypeElement returnTypeElement = ProcessorUtil.asTypeElement(typeUtils, returnType);
         if (executableElement.getReturnType().getKind() != TypeKind.DECLARED
-            || !returnType.startsWith(Response.class.getName())) {
+            || !returnTypeElement.getQualifiedName().toString().equals(Response.class.getName())) {
           messager.error(executableElement, "Endpoint method must return a Response");
           return;
+        }
+        var returnTypeGeneric = ProcessorUtil.getGenericTypes(returnType);
+        TypeMirror returnTypeOk = returnTypeGeneric.get(0);
+        TypeMirror returnTypeErr = returnTypeGeneric.get(1);
+
+        switch (handlerResponseType) {
+          case JSON:
+            if(returnTypeOk.getKind() != TypeKind.DECLARED  || returnTypeOk.toString().startsWith("java.lang.")) {
+              messager.error(executableElement, "Endpoint method must return a valid success object");
+              return;
+            }
+            if(returnTypeErr.getKind() != TypeKind.DECLARED || returnTypeErr.toString().startsWith("java.lang.")) {
+              messager.error(executableElement, "Endpoint method must return a valid error object");
+              return;
+            }
+            break;
+          case HTML:
+          case STRING:
+            if(!returnTypeOk.toString().equals(String.class.getName()) || !returnTypeErr.toString().equals(String.class.getName())) {
+              messager.error(executableElement, "Endpoint method must return a Response<String, String>");
+              return;
+            }
+            break;
+          case FILE:
+            messager.error(executableElement, "File response is not implemented yet");
+            return;
         }
 
         String rolesStr = "";
@@ -182,6 +216,10 @@ public class ControllersRound extends Round {
         List<String> queryParameters = new ArrayList<>();
 
         String bodySchema = null;
+        String returnOkSchema = null;
+        String returnErrSchema = null;
+
+
 
         for (VariableElement variableElement : executableElement.getParameters()) {
 
@@ -249,6 +287,8 @@ public class ControllersRound extends Round {
 
           }
         }
+
+
 
         endpoints.add(
             "javalin.addHandler(HandlerType." + handlerType + ",config.pathPrefix + \""

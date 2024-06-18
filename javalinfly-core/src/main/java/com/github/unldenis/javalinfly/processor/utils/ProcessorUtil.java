@@ -87,14 +87,14 @@ public final class ProcessorUtil {
     return typeUtils.isAssignable(typeMirror, interfaceTypeMirror);
   }
 
-  public static List<? extends TypeMirror> getGenericTypes(VariableElement variableElement) {
-    DeclaredType declaredType = (DeclaredType) variableElement.asType();
+  public static List<? extends TypeMirror> getGenericTypes(TypeMirror typeMirror) {
+    DeclaredType declaredType = (DeclaredType) typeMirror;
     return declaredType.getTypeArguments();
   }
 
-  public @Nullable TypeElement getExtracted(Types typeUtils, VariableElement ve) {
+  public TypeElement getExtracted(Types types, VariableElement ve) {
     TypeMirror typeMirror = ve.asType();
-    Element element = typeUtils.asElement(typeMirror);
+    Element element = types.asElement(typeMirror);
 
     // instanceof implies null-ckeck
     return (element instanceof TypeElement)
