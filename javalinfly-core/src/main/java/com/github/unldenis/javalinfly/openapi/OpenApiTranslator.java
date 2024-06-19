@@ -114,7 +114,7 @@ public class OpenApiTranslator {
 
     if (bodySchema != null) {
       cachedPathMethod.requestBody = new RequestBody(new Content());
-      if(bodySchema.equals("@UploadedFile")) {
+      if(bodySchema.equals("$UploadedFile")) {
         cachedPathMethod.requestBody.content.multipartFormData = new ContentFile();
       } else {
         cachedPathMethod.requestBody.content.applicationJson = new ContentJson(

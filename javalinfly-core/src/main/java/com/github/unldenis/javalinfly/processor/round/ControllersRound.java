@@ -20,6 +20,7 @@ import com.github.unldenis.javalinfly.openapi.model.Schema;
 import com.github.unldenis.javalinfly.processor.Round;
 import com.github.unldenis.javalinfly.processor.utils.ProcessorUtil;
 import com.github.unldenis.javalinfly.processor.utils.StringUtils;
+import io.javalin.http.UploadedFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -331,18 +332,28 @@ public class ControllersRound extends Round {
               // openapi
               bodySchema = "CustomType";
             } else {
-              parametersDecl.add(
-                  String.format("%s %s = (%s) ctx.bodyAsClass(%s.class);\n", typeParameter,
-                      nameParameter, typeParameter, classParameter));
+              if(typeParameter.equals("io.javalin.http.UploadedFile")) {
+                parametersDecl.add(
+                    String.format("%s %s =com.github.unldenis.javalinfly.ContextExt.uploadedFile(ctx);\n", typeParameter,
+                        nameParameter));
 
-              // openapi
-              TypeElement typeBodyName = ProcessorUtil.asTypeElement(typeUtils,
-                  variableElement.asType());
-              Schema schema = openApiUtil.classToSchema(schemaMap,
-                  variableElement.asType(),
-                  endpointPath.toString(), true, true);
+                bodySchema = "$UploadedFile";
 
-              bodySchema = typeBodyName.getSimpleName().toString();
+              } else {
+                parametersDecl.add(
+                    String.format("%s %s = (%s) ctx.bodyAsClass(%s.class);\n", typeParameter,
+                        nameParameter, typeParameter, classParameter));
+
+                // openapi
+                TypeElement typeBodyName = ProcessorUtil.asTypeElement(typeUtils,
+                    variableElement.asType());
+                Schema schema = openApiUtil.classToSchema(schemaMap,
+                    variableElement.asType(),
+                    endpointPath.toString(), true, true);
+
+                bodySchema = typeBodyName.getSimpleName().toString();
+              }
+
 
             }
 
