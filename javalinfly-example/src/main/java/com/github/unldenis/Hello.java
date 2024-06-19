@@ -1,6 +1,10 @@
 package com.github.unldenis;
 
 import com.github.unldenis.javalinfly.*;
+import com.github.unldenis.javalinfly.annotation.Body;
+import com.github.unldenis.javalinfly.annotation.Controller;
+import com.github.unldenis.javalinfly.annotation.Get;
+import com.github.unldenis.javalinfly.annotation.Post;
 import io.javalin.http.Context;
 
 @Controller(path = "/hello")

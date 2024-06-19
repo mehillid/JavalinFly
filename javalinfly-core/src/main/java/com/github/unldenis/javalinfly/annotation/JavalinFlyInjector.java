@@ -1,4 +1,4 @@
-package com.github.unldenis.javalinfly;
+package com.github.unldenis.javalinfly.annotation;
 
 
 

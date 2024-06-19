@@ -15,6 +15,7 @@ import com.github.unldenis.javalinfly.openapi.model.Info.Contact;
 import com.github.unldenis.javalinfly.openapi.model.OpenApi;
 import com.github.unldenis.javalinfly.openapi.model.Path;
 import com.github.unldenis.javalinfly.openapi.model.Path.Content;
+import com.github.unldenis.javalinfly.openapi.model.Path.Content.ContentFile;
 import com.github.unldenis.javalinfly.openapi.model.Path.Content.ContentJson;
 import com.github.unldenis.javalinfly.openapi.model.Path.PathMethod;
 import com.github.unldenis.javalinfly.openapi.model.Path.PathMethod.Parameter;
@@ -113,8 +114,13 @@ public class OpenApiTranslator {
 
     if (bodySchema != null) {
       cachedPathMethod.requestBody = new RequestBody(new Content());
-      cachedPathMethod.requestBody.content.applicationJson = new ContentJson(
-          schemas.get(bodySchema));
+      if(bodySchema.equals("@UploadedFile")) {
+        cachedPathMethod.requestBody.content.multipartFormData = new ContentFile();
+      } else {
+        cachedPathMethod.requestBody.content.applicationJson = new ContentJson(
+            schemas.get(bodySchema));
+      }
+
     }
 
     switch (responseType) {
@@ -142,6 +148,24 @@ public class OpenApiTranslator {
       case HTML:
         break;
       case FILE:
+        if (responseOkSchema != null) {
+          var success = new Response(
+              "Success response"
+          );
+          success.content = new Content();
+          success.content.multipartFormData = new ContentFile();
+
+          cachedPathMethod.responses.put("200", success);
+        }
+        if (responseErrSchema != null) {
+          var success = new Response(
+              "Error response"
+          );
+          success.content = new Content();
+          success.content.applicationJson = new ContentJson(schemas.get(responseErrSchema));
+
+          cachedPathMethod.responses.put("400", success);
+        }
         break;
       case STRING:
 

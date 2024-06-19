@@ -2,15 +2,16 @@ package com.github.unldenis.javalinfly.openapi;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.unldenis.javalinfly.OpenApiProperty;
+import com.github.unldenis.javalinfly.FileResponse;
+import com.github.unldenis.javalinfly.annotation.OpenApiProperty;
 import com.github.unldenis.javalinfly.openapi.model.Schema;
 import com.github.unldenis.javalinfly.processor.round.MessagerRound;
 import com.github.unldenis.javalinfly.processor.utils.ProcessorUtil;
+import io.javalin.http.UploadedFile;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;

@@ -1,16 +1,14 @@
-package com.github.unldenis.javalinfly;
-
+package com.github.unldenis.javalinfly.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.PARAMETER)
+@Target(ElementType.FIELD)
 @Retention(RetentionPolicy.CLASS)
+public @interface OpenApiProperty {
 
-public @interface Body {
-
-    boolean customType() default false;
+  String defaultValue() default "";
 
 }

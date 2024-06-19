@@ -2,6 +2,12 @@ package com.github.unldenis;
 
 
 import com.github.unldenis.javalinfly.*;
+import com.github.unldenis.javalinfly.annotation.Body;
+import com.github.unldenis.javalinfly.annotation.Controller;
+import com.github.unldenis.javalinfly.annotation.Get;
+import com.github.unldenis.javalinfly.annotation.Path;
+import com.github.unldenis.javalinfly.annotation.Post;
+import com.github.unldenis.javalinfly.annotation.Query;
 import io.javalin.http.Context;
 
 import java.util.List;
@@ -18,6 +24,8 @@ import java.util.List;
     public Response<Users, StandardError> createAll(Context ctx, @Body Users users) {
         return Response.ok(users);
     }
+
+
 
     @Get(tags = "user")
     public Response<User, StandardError> getUser(Context ctx, @Path String id, @Query String age) {

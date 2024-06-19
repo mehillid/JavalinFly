@@ -1,24 +1,20 @@
 package com.github.unldenis.javalinfly.processor;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.unldenis.javalinfly.*;
+import com.github.unldenis.javalinfly.annotation.JavalinFlyInjector;
 import com.github.unldenis.javalinfly.processor.round.ControllersRound;
 import com.github.unldenis.javalinfly.processor.round.GeneratorRound;
 import com.github.unldenis.javalinfly.processor.round.JavalinFlyInjectorRound;
 import com.github.unldenis.javalinfly.processor.round.MessagerRound;
-import com.github.unldenis.javalinfly.processor.utils.EnumUtils;
-import com.github.unldenis.javalinfly.processor.utils.ProcessorUtil;
 import com.google.auto.service.AutoService;
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.*;
 
-@SupportedAnnotationTypes({"com.github.unldenis.javalinfly.JavalinFlyInjector",
-    "com.github.unldenis.javalinfly.Controller"})
+@SupportedAnnotationTypes({"com.github.unldenis.javalinfly.annotation.JavalinFlyInjector",
+    "com.github.unldenis.javalinfly.annotation.Controller"})
 @SupportedSourceVersion(SourceVersion.RELEASE_11)
 @AutoService(Processor.class)
 public class JavalinFlyProcessor extends AbstractProcessor {

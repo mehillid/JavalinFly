@@ -1,4 +1,4 @@
-package com.github.unldenis.javalinfly;
+package com.github.unldenis.javalinfly.annotation;
 
 
 import java.lang.annotation.ElementType;
@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.CLASS)
 
-public @interface Query {
+public @interface Path {
 
 }

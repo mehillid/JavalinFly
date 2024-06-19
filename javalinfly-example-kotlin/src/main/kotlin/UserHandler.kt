@@ -1,6 +1,7 @@
 package com.github.unldenis
 
 import com.github.unldenis.javalinfly.*
+import com.github.unldenis.javalinfly.annotation.*
 import com.github.unldenis.javalinfly.kotlin.response
 import io.javalin.http.Context
 
@@ -22,6 +23,10 @@ class UserHandler {
 
     }
 
+    @Put
+    fun putUser(ctx : Context, @Path userId : String, @Body user : User) = response<User, StandardError> {
+        ok = user
+    }
     class Users {
         var users: List<User>? = null
 

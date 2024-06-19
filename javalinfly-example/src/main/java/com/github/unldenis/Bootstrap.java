@@ -1,12 +1,9 @@
 package com.github.unldenis;
 
-import com.github.unldenis.Bootstrap.MyRoles;
 import com.github.unldenis.javalinfly.JavalinFly;
-import com.github.unldenis.javalinfly.JavalinFlyInjector;
+import com.github.unldenis.javalinfly.annotation.JavalinFlyInjector;
 import io.javalin.Javalin;
 import io.javalin.security.RouteRole;
-
-import java.util.Map;
 
 
 public class Bootstrap {

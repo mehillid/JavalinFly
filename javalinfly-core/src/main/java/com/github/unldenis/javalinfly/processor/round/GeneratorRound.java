@@ -1,23 +1,17 @@
 package com.github.unldenis.javalinfly.processor.round;
 
-import com.github.unldenis.javalinfly.JavalinFly;
-import com.github.unldenis.javalinfly.JavalinFlyInjector;
+import com.github.unldenis.javalinfly.annotation.JavalinFlyInjector;
 import com.github.unldenis.javalinfly.ResponseType;
 import com.github.unldenis.javalinfly.Vars;
 import com.github.unldenis.javalinfly.openapi.OpenApiTranslator;
 import com.github.unldenis.javalinfly.openapi.SwaggerUIHtmlGenerator;
-import com.github.unldenis.javalinfly.openapi.model.Info;
-import com.github.unldenis.javalinfly.openapi.model.Info.Contact;
 import com.github.unldenis.javalinfly.openapi.model.OpenApi;
 import com.github.unldenis.javalinfly.processor.JavalinFlyConfig;
-import com.github.unldenis.javalinfly.processor.JavalinFlyProcessor;
 import com.github.unldenis.javalinfly.processor.Round;
 import io.javalin.Javalin;
-import io.javalin.http.HandlerType;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.function.Consumer;

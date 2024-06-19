@@ -1,6 +1,6 @@
 package com.github.unldenis.javalinfly.processor.round;
 
-import com.github.unldenis.javalinfly.JavalinFlyInjector;
+import com.github.unldenis.javalinfly.annotation.JavalinFlyInjector;
 import com.github.unldenis.javalinfly.processor.Round;
 import com.github.unldenis.javalinfly.processor.utils.EnumUtils;
 import com.github.unldenis.javalinfly.processor.utils.ProcessorUtil;

@@ -1,22 +1,20 @@
 package com.github.unldenis.javalinfly.processor.round;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.github.unldenis.javalinfly.Body;
-import com.github.unldenis.javalinfly.Controller;
-import com.github.unldenis.javalinfly.Delete;
-import com.github.unldenis.javalinfly.Get;
-import com.github.unldenis.javalinfly.Path;
-import com.github.unldenis.javalinfly.Post;
-import com.github.unldenis.javalinfly.Put;
-import com.github.unldenis.javalinfly.Query;
+import com.github.unldenis.javalinfly.annotation.Body;
+import com.github.unldenis.javalinfly.annotation.Controller;
+import com.github.unldenis.javalinfly.annotation.Delete;
+import com.github.unldenis.javalinfly.FileResponse;
+import com.github.unldenis.javalinfly.annotation.Get;
+import com.github.unldenis.javalinfly.annotation.Path;
+import com.github.unldenis.javalinfly.annotation.Post;
+import com.github.unldenis.javalinfly.annotation.Put;
+import com.github.unldenis.javalinfly.annotation.Query;
 import com.github.unldenis.javalinfly.Response;
 import com.github.unldenis.javalinfly.ResponseType;
 import com.github.unldenis.javalinfly.SuccessResponse;
-import com.github.unldenis.javalinfly.openapi.OpenApiTranslator;
 import com.github.unldenis.javalinfly.openapi.OpenApiUtil;
 import com.github.unldenis.javalinfly.openapi.model.Schema;
 import com.github.unldenis.javalinfly.processor.Round;
@@ -38,7 +36,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -237,17 +234,38 @@ public class ControllersRound extends Round {
               }
               break;
             case FILE:
-              messager.error(executableElement, "File response is not implemented yet");
-              return;
+              if(returnTypeOk.getKind() != TypeKind.DECLARED  || !returnTypeOk.toString().equals(
+                  FileResponse.class.getName())) {
+                messager.error(executableElement, "Endpoint response must return a FileResponse");
+                return;
+              }
+
+              // openapi
+
+              // ok
+              {
+                returnOkSchema = "@FileResponse";
+              }
+              // err
+              {
+                TypeElement typeErr = ProcessorUtil.asTypeElement(typeUtils, returnTypeErr);
+                var schema = openApiUtil.classToSchema(schemaMap,
+                    returnTypeErr, endpointPath.toString(), true, true);
+
+                returnErrSchema = typeErr.getSimpleName().toString();
+              }
           }
-        } else if(returnTypeElement.getQualifiedName().toString().equals(SuccessResponse.class.getName())) {
+        }
+        else if(returnTypeElement.getQualifiedName().toString().equals(SuccessResponse.class.getName())) {
           var returnTypeGeneric = ProcessorUtil.getGenericTypes(returnType);
           TypeMirror returnTypeErr = returnTypeGeneric.get(0);
 
           switch (handlerResponseType) {
             case JSON:
-              if(returnTypeErr.getKind() != TypeKind.DECLARED || returnTypeErr.toString().startsWith("java.lang.")) {
-                messager.error(executableElement, "Endpoint method must return a valid error object");
+              if (returnTypeErr.getKind() != TypeKind.DECLARED || returnTypeErr.toString()
+                  .startsWith("java.lang.")) {
+                messager.error(executableElement,
+                    "Endpoint method must return a valid error object");
                 return;
               }
               // openapi
@@ -256,7 +274,6 @@ public class ControllersRound extends Round {
             {
               returnOkSchema = "SuccessResponse";
             }
-
             // err
             {
               TypeElement typeErr = ProcessorUtil.asTypeElement(typeUtils, returnTypeErr);
@@ -269,16 +286,18 @@ public class ControllersRound extends Round {
             break;
             case HTML:
             case STRING:
-              if(!returnTypeErr.toString().equals(String.class.getName())) {
-                messager.error(executableElement, "Endpoint method must return a SuccessResponse<String>");
+              if (!returnTypeErr.toString().equals(String.class.getName())) {
+                messager.error(executableElement,
+                    "Endpoint method must return a SuccessResponse<String>");
                 return;
               }
               break;
             case FILE:
-              messager.error(executableElement, "File response is not implemented yet");
+              messager.error(executableElement, "File response is not supported in SuccessResponse");
               return;
           }
-        } else {
+        }
+        else {
           messager.error(executableElement, "Endpoint method must return a Response or SuccessResponse");
           return;
         }

@@ -1,6 +1,7 @@
-package com.github.unldenis.javalinfly;
+package com.github.unldenis.javalinfly.annotation;
 
 
+import com.github.unldenis.javalinfly.ResponseType;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -8,7 +9,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.CLASS)
-public @interface Post {
+public @interface Delete {
 
   String[] roles() default {};
 
