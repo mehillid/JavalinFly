@@ -12,7 +12,9 @@ Latest release
 
 [![Version](https://img.shields.io/github/v/release/qlsolutions/JavalinFly?style=flat-square)](https://github.com/qlsolutions/JavalinFly/releases/latest)
 
-#### Maven configuration
+<details open>
+    <summary>Maven</summary>
+
 Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
 
 - Dependency
@@ -41,8 +43,10 @@ Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
         </configuration>
     </plugin>
    ```
-  
-- *Optionally also the kotlin module*
+
+- <details open>
+  <summary>Optionally also the kotlin module</summary>
+
     ```xml
     <dependency>
         <groupId>com.github.qlsolutions.JavalinFly</groupId>
@@ -51,29 +55,39 @@ Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
     </dependency>
     ```
 
+</details>
 
-#### Gradle
+
+<details open>
+    <summary>Gradle</summary>
+
+Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
+
 
 - Groovy DSL
 
     - Dependency
-  
+
     ```groovy
     implementation 'com.github.qlsolutions.JavalinFly:javalinfly-core:${javalinfly-version}'
     ```
 
     - Annotation processor
-  
+
     ```groovy
     annotationProcessor 'com.github.qlsolutions.JavalinFly:javalinfly-core:${javalinfly-version}'
     ```
-  
-    - *Optionally also the kotlin module*
-  
-    ```groovy
-    implementation 'com.github.qlsolutions.JavalinFly:javalinfly-kotlin:${javalinfly-version}'
-    ```
-    
+
+    - <details>
+        <summary>Optionally also the kotlin module</summary>
+      
+        ```groovy
+        implementation 'com.github.qlsolutions.JavalinFly:javalinfly-kotlin:${javalinfly-version}'
+        ```
+      
+        </details>
+
+
 
 - Kotlin DSL
 
@@ -87,8 +101,13 @@ Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
     annotationProcessor("com.github.qlsolutions.JavalinFly:javalinfly-core:${javalinfly-version}")
     ```
 
-    - *Optionally also the kotlin module*
-    ```groovy
-    implementation("com.github.qlsolutions.JavalinFly:javalinfly-kotlin:${javalinfly-version}")
-    ```
-  
+    - <details>
+        <summary>Optionally also the kotlin module</summary>
+
+        ```groovy
+        implementation("com.github.qlsolutions.JavalinFly:javalinfly-kotlin:${javalinfly-version}")
+        ```
+
+        </details>
+
+</details>
