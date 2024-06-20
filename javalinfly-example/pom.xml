@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.github.unldenis</groupId>
         <artifactId>JavalinFly</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.1</version>
     </parent>
 
     <artifactId>javalinfly-example</artifactId>
@@ -51,9 +51,9 @@
                 <configuration>
                     <annotationProcessorPaths>
                         <annotationProcessorPath>
-                            <groupId>com.github.unldenis</groupId>
+                            <groupId>${project.parent.groupId}</groupId>
                             <artifactId>javalinfly-core</artifactId>
-                            <version>1.0-SNAPSHOT</version>
+                            <version>${project.parent.version}</version>
                         </annotationProcessorPath>
                     </annotationProcessorPaths>
                 </configuration>
