@@ -164,6 +164,9 @@ public class ControllersRound extends Round {
           return;
         }
 
+        if(handlerRoles.length == 0 && injector.defaultRoles().length > 0) {
+          handlerRoles = injector.defaultRoles();
+        }
 
 
         String rolesStr = "";

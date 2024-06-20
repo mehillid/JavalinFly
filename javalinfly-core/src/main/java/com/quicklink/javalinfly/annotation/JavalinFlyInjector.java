@@ -13,7 +13,10 @@ import java.lang.annotation.Target;
 public @interface JavalinFlyInjector {
   Class<? extends Enum> rolesClass();
 
+  String[] defaultRoles() default {};
+
   boolean generateDocumentation() default true;
+
 
 
 //  Info info() default @Info();
