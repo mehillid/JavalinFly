@@ -28,4 +28,8 @@ public class MessagerRound {
   public void warning(@NotNull String msg, @NotNull Object... args) {
     messager.printMessage(Kind.WARNING, String.format(msg, args));
   }
+
+  public void warning(@NotNull Element e, @NotNull String msg, @NotNull Object... args) {
+    messager.printMessage(Kind.WARNING, String.format(msg, args), e);
+  }
 }

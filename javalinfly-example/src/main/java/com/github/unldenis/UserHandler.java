@@ -11,6 +11,7 @@ import com.github.unldenis.javalinfly.annotation.Query;
 import io.javalin.http.Context;
 
 import java.util.List;
+import org.jetbrains.annotations.NotNull;
 
 @Controller(path = "/user") public class UserHandler {
 
@@ -28,7 +29,7 @@ import java.util.List;
 
 
     @Get(tags = "user")
-    public Response<User, StandardError> getUser(Context ctx, @Path String id, @Query String age) {
+    public Response<User, StandardError> getUser(Context ctx, @Path String id, @Query @NotNull String age) {
         return Response.ok(new User("denis", 2));
     }
 
@@ -56,9 +57,9 @@ import java.util.List;
 
 
     public static class StandardError {
-        public String cause;
+        public @NotNull String cause;
 
-        public StandardError(String cause) {
+        public StandardError(@NotNull String cause) {
             this.cause = cause;
         }
     }

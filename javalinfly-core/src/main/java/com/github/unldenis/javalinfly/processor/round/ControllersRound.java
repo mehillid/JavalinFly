@@ -15,6 +15,7 @@ import com.github.unldenis.javalinfly.annotation.Query;
 import com.github.unldenis.javalinfly.Response;
 import com.github.unldenis.javalinfly.ResponseType;
 import com.github.unldenis.javalinfly.SuccessResponse;
+import com.github.unldenis.javalinfly.exception.handler.impl.QueryParamNotFoundException;
 import com.github.unldenis.javalinfly.openapi.OpenApiUtil;
 import com.github.unldenis.javalinfly.openapi.model.Schema;
 import com.github.unldenis.javalinfly.processor.Round;
@@ -382,6 +383,12 @@ public class ControllersRound extends Round {
 
             queryParameters.add("\"" + nameParameter + "\"");
 
+
+            NotNull notNull = variableElement.getAnnotation(NotNull.class);
+            if(notNull != null) {
+              parametersDecl.add(String.format("if(%s == null) throw new %s(\"%s\");\n", nameParameter,
+                  QueryParamNotFoundException.class.getName(), nameParameter));
+            }
           }
         }
 

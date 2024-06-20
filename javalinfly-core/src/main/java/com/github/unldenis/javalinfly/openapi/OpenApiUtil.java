@@ -22,6 +22,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.jetbrains.annotations.NotNull;
 
 public class OpenApiUtil {
 
@@ -40,7 +41,7 @@ public class OpenApiUtil {
 
     Element element = ProcessorUtil.asTypeElement(typeUtils, typeMirror);
 
-    messager.print("Type %s, element %s, kind %s", typeMirror, element,
+    messager.warning("Path '%s', Type '%s', element '%s', kind '%s'", path, typeMirror, element,
         element.getKind().toString());
     if (typeMirror.getKind() == TypeKind.TYPEVAR) {
       typeMirror = ((TypeVariable) typeMirror).getUpperBound();
@@ -57,6 +58,8 @@ public class OpenApiUtil {
 
     String nameClass = classElement.getSimpleName().toString();
     if (schemas.containsKey(nameClass)) {
+      messager.warning("Key already contained...");
+
       return Schema.builder().$ref(Schema.schemaRef(nameClass)).build();
     }
     if (createSchema) {
@@ -95,6 +98,7 @@ public class OpenApiUtil {
 
     List<String> required = new ArrayList<>();
     List<? extends Element> members = elementUtils.getAllMembers(classElement);
+    messager.warning("Starting processing variables...");
 
     for (Element member : members) {
       if (member.getKind() == ElementKind.FIELD) {
@@ -114,14 +118,20 @@ public class OpenApiUtil {
             continue;
           }
         }
+//
+        if(variableElement.getAnnotation(NotNull.class) != null) {
+          required.add(variableElement.getSimpleName().toString());
+        }
 
         OpenApiProperty openApiProperty = variableElement.getAnnotation(OpenApiProperty.class);
         String exampleProperty = openApiProperty != null ? openApiProperty.defaultValue() : null;
 
-        if (!variableElement.asType().getKind().isPrimitive() && !variableElement.asType()
-            .toString().startsWith("java.lang.")) {
-          required.add(variableElement.getSimpleName().toString());
-        }
+//        if (!variableElement.asType().getKind().isPrimitive() && !variableElement.asType()
+//            .toString().startsWith("java.lang.")) {
+//          required.add(variableElement.getSimpleName().toString());
+//        }
+
+        messager.warning("Variable '%s'", variableElement.getSimpleName().toString());
 
         TypeMirror returnType = variableElement.asType();
         Schema fieldSchema = typeMirrorToSchema(schemas, returnType, path, request);
@@ -143,6 +153,8 @@ public class OpenApiUtil {
 
   private Schema typeMirrorToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path,
       boolean request) {
+    messager.warning("typeMirrorToSchema, path '%s', typeMirror '%s'", path, typeMirror);
+
     switch (typeMirror.getKind()) {
       case BOOLEAN:
         return Schema.builder().type("boolean").build();
@@ -153,14 +165,15 @@ public class OpenApiUtil {
       case DOUBLE:
         return Schema.builder().type("number").build();
       case DECLARED:
-        String typeName = typeMirror.toString();
+        String typeName = ProcessorUtil.getClassNameWithoutAnnotations(typeMirror);
+        messager.warning("TypeName UTIL '%s'", typeName);
         if (typeName.equals("java.lang.String")) {
           return Schema.builder().type("string").build();
         } else if (typeName.equals("java.util.UUID")) {
           return Schema.builder().type("string").format("uuid").build();
         } else {
           Element returnTypeElement = typeUtils.asElement(typeMirror);
-          messager.warning("UTIL function return %s, element %s", typeMirror, returnTypeElement);
+          messager.warning("UTIL function return '%s', element '%s'", typeMirror, returnTypeElement);
 
           if (returnTypeElement instanceof TypeElement && isEnum((TypeElement) returnTypeElement)) {
             return Schema.builder().type("string")
@@ -170,8 +183,12 @@ public class OpenApiUtil {
           }
         }
       default:
-        throw new IllegalArgumentException("Unsupported field type: " + typeMirror);
+        messager.error("Unsupported field type %s of path %s", typeMirror.toString(), path);
+//        throw new IllegalArgumentException("Unsupported field type: " + typeMirror);
+
+        return null;
     }
+
   }
 
   private TypeMirror getGenericType(DeclaredType declaredType, int index) {

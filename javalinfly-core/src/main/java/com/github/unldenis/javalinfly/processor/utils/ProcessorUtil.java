@@ -11,6 +11,7 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -99,5 +100,16 @@ public final class ProcessorUtil {
     // instanceof implies null-ckeck
     return (element instanceof TypeElement)
         ? (TypeElement)element : null;
+  }
+
+  public static String getClassNameWithoutAnnotations(TypeMirror typeMirror) {
+    // Check if the type is declared (i.e., a class or interface type)
+    if (typeMirror.getKind() == TypeKind.DECLARED) {
+      DeclaredType declaredType = (DeclaredType) typeMirror;
+      TypeElement typeElement = (TypeElement) declaredType.asElement();
+      return typeElement.getQualifiedName().toString();
+    } else {
+      return typeMirror.toString();
+    }
   }
 }

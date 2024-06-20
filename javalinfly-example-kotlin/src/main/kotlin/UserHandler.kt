@@ -24,7 +24,7 @@ class UserHandler {
     }
 
     @Put
-    fun putUser(ctx : Context, @Path userId : String, @Body user : User) = response<User, StandardError> {
+    fun putUser(ctx : Context, @Query userId : String, @Body user : User) = response<User, StandardError> {
         ok = user
     }
     class Users {
@@ -38,18 +38,18 @@ class UserHandler {
     }
 
     class User {
-        var name: String? = null
+        lateinit var name: String
         var age: Int = 0
 
         constructor()
 
-        constructor(name: String?, age: Int) {
+        constructor(name: String, age: Int) {
             this.name = name
             this.age = age
         }
     }
 
 
-    class StandardError(var cause: String)
+    class StandardError(var cause: String, var details : String?)
 }
 
