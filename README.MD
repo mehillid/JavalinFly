@@ -4,7 +4,7 @@ The goal is to simplify development while using zero reflection.
 Features:
 - Automatic OpenAPI Documentation: Automatically generate OpenAPI documentation for your Javalin routes.
 - Zero Reflection: Improve performance and reduce complexity by avoiding reflection.
-- Ease of Development: Simplify the development process with automatic documentation generation.
+- Ease of Development: Simplify the development process with automatic javalin handlers injection.
 
 ### Add dependency
 
