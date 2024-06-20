@@ -8,6 +8,7 @@
   <artifactId>JavalinFly</artifactId>
   <version>0.1</version>
   <packaging>pom</packaging>
+
   <modules>
     <module>javalinfly-core</module>
     <module>javalinfly-example</module>
