@@ -12,7 +12,7 @@ Latest release
 
 [![Version](https://img.shields.io/github/v/release/qlsolutions/JavalinFly?style=flat-square)](https://github.com/qlsolutions/JavalinFly/releases/latest)
 
-<details open>
+<details>
     <summary>Maven</summary>
 
 Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
@@ -44,7 +44,7 @@ Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
     </plugin>
    ```
 
-- <details open>
+- <details>
   <summary>Optionally also the kotlin module</summary>
 
     ```xml
@@ -58,7 +58,7 @@ Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
 </details>
 
 
-<details open>
+<details>
     <summary>Gradle</summary>
 
 Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
@@ -110,4 +110,5 @@ Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
 
         </details>
 
+    
 </details>
