@@ -41,8 +41,8 @@ public class OpenApiUtil {
 
     Element element = ProcessorUtil.asTypeElement(typeUtils, typeMirror);
 
-    messager.warning("Path '%s', Type '%s', element '%s', kind '%s'", path, typeMirror, element,
-        element.getKind().toString());
+//    messager.warning("Path '%s', Type '%s', element '%s', kind '%s'", path, typeMirror, element,
+//        element.getKind().toString());
     if (typeMirror.getKind() == TypeKind.TYPEVAR) {
       typeMirror = ((TypeVariable) typeMirror).getUpperBound();
     }
@@ -58,7 +58,7 @@ public class OpenApiUtil {
 
     String nameClass = classElement.getSimpleName().toString();
     if (schemas.containsKey(nameClass)) {
-      messager.warning("Key already contained...");
+//      messager.warning("Key already contained...");
 
       return Schema.builder().$ref(Schema.schemaRef(nameClass)).build();
     }
@@ -73,7 +73,7 @@ public class OpenApiUtil {
       TypeMirror genericListType = getGenericType(declaredType, 0);
       if (genericListType != null) {
         Element genericElement = typeUtils.asElement(genericListType);
-        messager.warning("Generic mirror %s, element %s", genericListType, genericElement);
+//        messager.warning("Generic mirror %s, element %s", genericListType, genericElement);
         schema.items = classToSchema(schemas, genericListType, path, request, false);
       } else {
         schema.items = Schema.builder().type("object").description("Unknown type").build();
@@ -85,7 +85,7 @@ public class OpenApiUtil {
       TypeMirror valueType = getGenericType(declaredType, 1);
 
       assert keyType != null;
-      if (!keyType.toString().equals("java.lang.String")) {
+      if (!ProcessorUtil.getClassNameWithoutAnnotations(keyType).equals("java.lang.String")) {
         throw new IllegalStateException("Invalid map at path " + path + ", key must be a String");
       }
       schema.additionalProperties = classToSchema(schemas, valueType, path, request, false);
@@ -98,7 +98,7 @@ public class OpenApiUtil {
 
     List<String> required = new ArrayList<>();
     List<? extends Element> members = elementUtils.getAllMembers(classElement);
-    messager.warning("Starting processing variables...");
+//    messager.warning("Starting processing variables...");
 
     for (Element member : members) {
       if (member.getKind() == ElementKind.FIELD) {
@@ -131,7 +131,7 @@ public class OpenApiUtil {
 //          required.add(variableElement.getSimpleName().toString());
 //        }
 
-        messager.warning("Variable '%s'", variableElement.getSimpleName().toString());
+//        messager.warning("Variable '%s'", variableElement.getSimpleName().toString());
 
         TypeMirror returnType = variableElement.asType();
         Schema fieldSchema = typeMirrorToSchema(schemas, returnType, path, request);
@@ -153,7 +153,7 @@ public class OpenApiUtil {
 
   private Schema typeMirrorToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path,
       boolean request) {
-    messager.warning("typeMirrorToSchema, path '%s', typeMirror '%s'", path, typeMirror);
+//    messager.warning("typeMirrorToSchema, path '%s', typeMirror '%s'", path, typeMirror);
 
     switch (typeMirror.getKind()) {
       case BOOLEAN:
@@ -166,14 +166,14 @@ public class OpenApiUtil {
         return Schema.builder().type("number").build();
       case DECLARED:
         String typeName = ProcessorUtil.getClassNameWithoutAnnotations(typeMirror);
-        messager.warning("TypeName UTIL '%s'", typeName);
+//        messager.warning("TypeName UTIL '%s'", typeName);
         if (typeName.equals("java.lang.String")) {
           return Schema.builder().type("string").build();
         } else if (typeName.equals("java.util.UUID")) {
           return Schema.builder().type("string").format("uuid").build();
         } else {
           Element returnTypeElement = typeUtils.asElement(typeMirror);
-          messager.warning("UTIL function return '%s', element '%s'", typeMirror, returnTypeElement);
+//          messager.warning("UTIL function return '%s', element '%s'", typeMirror, returnTypeElement);
 
           if (returnTypeElement instanceof TypeElement && isEnum((TypeElement) returnTypeElement)) {
             return Schema.builder().type("string")

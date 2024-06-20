@@ -45,7 +45,7 @@ public class JavalinFlyProcessor extends AbstractProcessor {
 //            return true;
 //        }
     // check injector
-    messagerRound.print("** Hello");
+//    messagerRound.print("** Hello");
 
     // javalinflyinjector
     if(javalinFlyInjectorRound == null) {

@@ -168,7 +168,7 @@ public class ControllersRound extends Round {
 
           rolesStr = ", new RouteRole[]{";
           rolesStr += String.join(",", Arrays.stream(handlerRoles)
-              .map(roleName -> rolesTypeMirror.toString() + "." + roleName)
+              .map(roleName -> ProcessorUtil.getClassNameWithoutAnnotations(rolesTypeMirror) + "." + roleName)
               .collect(Collectors.toSet()));
           rolesStr += "}";
         }
@@ -199,11 +199,11 @@ public class ControllersRound extends Round {
 
           switch (handlerResponseType) {
             case JSON:
-              if(returnTypeOk.getKind() != TypeKind.DECLARED  || returnTypeOk.toString().startsWith("java.lang.")) {
+              if(returnTypeOk.getKind() != TypeKind.DECLARED  || ProcessorUtil.getClassNameWithoutAnnotations(returnTypeOk).startsWith("java.lang.")) {
                 messager.error(executableElement, "Endpoint method must return a valid success object");
                 return;
               }
-              if(returnTypeErr.getKind() != TypeKind.DECLARED || returnTypeErr.toString().startsWith("java.lang.")) {
+              if(returnTypeErr.getKind() != TypeKind.DECLARED || ProcessorUtil.getClassNameWithoutAnnotations(returnTypeErr).startsWith("java.lang.")) {
                 messager.error(executableElement, "Endpoint method must return a valid error object");
                 return;
               }
@@ -230,13 +230,13 @@ public class ControllersRound extends Round {
             break;
             case HTML:
             case STRING:
-              if(!returnTypeOk.toString().equals(String.class.getName()) || !returnTypeErr.toString().equals(String.class.getName())) {
+              if(!ProcessorUtil.getClassNameWithoutAnnotations(returnTypeOk).equals(String.class.getName()) || !ProcessorUtil.getClassNameWithoutAnnotations(returnTypeErr).equals(String.class.getName())) {
                 messager.error(executableElement, "Endpoint method must return a Response<String, String>");
                 return;
               }
               break;
             case FILE:
-              if(returnTypeOk.getKind() != TypeKind.DECLARED  || !returnTypeOk.toString().equals(
+              if(returnTypeOk.getKind() != TypeKind.DECLARED  || !ProcessorUtil.getClassNameWithoutAnnotations(returnTypeOk).equals(
                   FileResponse.class.getName())) {
                 messager.error(executableElement, "Endpoint response must return a FileResponse");
                 return;
@@ -264,7 +264,7 @@ public class ControllersRound extends Round {
 
           switch (handlerResponseType) {
             case JSON:
-              if (returnTypeErr.getKind() != TypeKind.DECLARED || returnTypeErr.toString()
+              if (returnTypeErr.getKind() != TypeKind.DECLARED || ProcessorUtil.getClassNameWithoutAnnotations(returnTypeErr)
                   .startsWith("java.lang.")) {
                 messager.error(executableElement,
                     "Endpoint method must return a valid error object");
@@ -288,7 +288,7 @@ public class ControllersRound extends Round {
             break;
             case HTML:
             case STRING:
-              if (!returnTypeErr.toString().equals(String.class.getName())) {
+              if (!ProcessorUtil.getClassNameWithoutAnnotations(returnTypeErr).equals(String.class.getName())) {
                 messager.error(executableElement,
                     "Endpoint method must return a SuccessResponse<String>");
                 return;

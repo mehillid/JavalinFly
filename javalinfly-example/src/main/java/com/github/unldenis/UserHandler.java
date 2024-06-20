@@ -44,12 +44,12 @@ import org.jetbrains.annotations.NotNull;
     }
 
     public static class User {
-        public String name;
+
+        public @NotNull String name;
         public int age;
 
-        public User() {}
 
-        public User(String name, int age) {
+        public User(@NotNull String name, int age) {
             this.name = name;
             this.age = age;
         }

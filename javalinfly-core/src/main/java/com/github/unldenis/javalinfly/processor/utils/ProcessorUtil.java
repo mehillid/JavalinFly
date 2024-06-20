@@ -26,14 +26,9 @@ public final class ProcessorUtil {
   private ProcessorUtil() {
   }
 
-  public static String getPackageName(TypeElement classElement) {
-    return ((PackageElement) classElement.getEnclosingElement()).getQualifiedName().toString();
-  }
-
-  public static String getSimpleNameAsString(Element element) {
-    return element.getSimpleName().toString();
-  }
-
+//  public static String getPackageName(TypeElement classElement) {
+//    return ((PackageElement) classElement.getEnclosingElement()).getQualifiedName().toString();
+//  }
   public static String capitalize(String name) {
     return name.substring(0, 1).toUpperCase(ENGLISH) + name.substring(1);
   }
@@ -43,9 +38,9 @@ public final class ProcessorUtil {
   }
 
 
-  public static boolean isTypeElement(Element element) {
-    return element instanceof TypeElement;
-  }
+//  public static boolean isTypeElement(Element element) {
+//    return element instanceof TypeElement;
+//  }
 
   public static TypeElement asTypeElement(Types typeUtils, TypeMirror typeMirror) {
     return (TypeElement) typeUtils.asElement(typeMirror);
