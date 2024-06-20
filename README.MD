@@ -13,6 +13,7 @@ Latest release
 [![Version](https://img.shields.io/github/v/release/qlsolutions/JavalinFly?style=flat-square)](https://github.com/qlsolutions/JavalinFly/releases/latest)
 
 #### Maven configuration
+Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
 
 - Dependency
    ```xml
@@ -64,10 +65,10 @@ Latest release
     annotationProcessor 'com.github.qlsolutions.JavalinFly:javalinfly-core:${javalinfly-version}'
     ```
   
-  - *Optionally also the kotlin module*
-     ```groovy
-     implementation 'com.github.qlsolutions.JavalinFly:javalinfly-kotlin:${javalinfly-version}'
-     ```
+    - *Optionally also the kotlin module*
+    ```groovy
+    implementation 'com.github.qlsolutions.JavalinFly:javalinfly-kotlin:${javalinfly-version}'
+    ```
     
 
 - Kotlin DSL
@@ -85,4 +86,3 @@ Latest release
     ```groovy
     implementation("com.github.qlsolutions.JavalinFly:javalinfly-kotlin:${javalinfly-version}")
     ```
-Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
