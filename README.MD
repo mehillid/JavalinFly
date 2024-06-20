@@ -31,7 +31,7 @@ Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
     <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.13.0</version>
+        <version>3.8.1</version>
         <configuration>
             <annotationProcessorPaths>
                 <annotationProcessorPath>
