@@ -1,12 +1,12 @@
-package com.github.unldenis
+package com.quicklink.javalinfly.kotlin.example
 
-import com.github.unldenis.javalinfly.*
-import com.github.unldenis.javalinfly.annotation.Body
-import com.github.unldenis.javalinfly.annotation.Controller
-import com.github.unldenis.javalinfly.annotation.Get
-import com.github.unldenis.javalinfly.annotation.Post
-import com.github.unldenis.javalinfly.kotlin.response
-import com.github.unldenis.javalinfly.kotlin.successResponse
+import com.quicklink.javalinfly.annotation.Body
+import com.quicklink.javalinfly.annotation.Controller
+import com.quicklink.javalinfly.annotation.Get
+import com.quicklink.javalinfly.annotation.Post
+import com.quicklink.javalinfly.kotlin.response
+import com.quicklink.javalinfly.kotlin.successResponse
+import com.quicklink.javalinfly.ResponseType
 import io.javalin.http.Context
 
 @Controller(path = "/hello")

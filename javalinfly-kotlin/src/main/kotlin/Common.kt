@@ -1,4 +1,4 @@
-package com.github.unldenis.javalinfly.kotlin
+package com.quicklink.javalinfly.kotlin
 
 import kotlin.properties.Delegates
 

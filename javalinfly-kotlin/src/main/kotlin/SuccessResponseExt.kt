@@ -1,6 +1,6 @@
-package com.github.unldenis.javalinfly.kotlin
+package com.quicklink.javalinfly.kotlin
 
-import com.github.unldenis.javalinfly.SuccessResponse
+import com.quicklink.javalinfly.SuccessResponse
 
 fun <E> successResponse(function: SuccessResponseDSL<E>.() -> Unit): SuccessResponse<E> {
     val dsl = SuccessResponseDSL<E>()

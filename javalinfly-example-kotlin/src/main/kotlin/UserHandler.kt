@@ -1,8 +1,8 @@
-package com.github.unldenis
+package com.quicklink.javalinfly.kotlin.example
 
-import com.github.unldenis.javalinfly.*
-import com.github.unldenis.javalinfly.annotation.*
-import com.github.unldenis.javalinfly.kotlin.response
+import com.quicklink.javalinfly.ResponseType
+import com.quicklink.javalinfly.annotation.*
+import com.quicklink.javalinfly.kotlin.response
 import io.javalin.http.Context
 
 @Controller(path = "/user")

@@ -1,7 +1,6 @@
-package com.github.unldenis.javalinfly.kotlin
+package com.quicklink.javalinfly.kotlin
 
-import com.github.unldenis.javalinfly.Response
-import kotlin.properties.Delegates
+import com.quicklink.javalinfly.Response
 
 fun <T, E> response(function: ResponseDSL<T, E>.() -> Unit): Response<T, E> {
     val dsl = ResponseDSL<T, E>()

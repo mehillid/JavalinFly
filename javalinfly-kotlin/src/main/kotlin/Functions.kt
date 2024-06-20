@@ -1,9 +1,7 @@
-package com.github.unldenis.javalinfly.kotlin
+package com.quicklink.javalinfly.kotlin
 
-import com.github.unldenis.javalinfly.Response
-import com.github.unldenis.javalinfly.SuccessResponse
-import com.github.unldenis.javalinfly.openapi.model.OpenApi
-import com.github.unldenis.javalinfly.processor.JavalinFlyConfig
+import com.quicklink.javalinfly.openapi.model.OpenApi
+import com.quicklink.javalinfly.processor.JavalinFlyConfig
 
 
 fun JavalinFlyConfig.openapi(builder: OpenApi.() -> Unit) {

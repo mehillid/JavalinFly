@@ -1,13 +1,23 @@
-package com.github.unldenis
+package com.quicklink.javalinfly.kotlin.example
 
-import com.github.unldenis.javalinfly.JavalinFly
-import com.github.unldenis.javalinfly.annotation.JavalinFlyInjector
-import com.github.unldenis.javalinfly.kotlin.openapi
-import com.github.unldenis.javalinfly.openapi.model.Servers
+import com.quicklink.javalinfly.JavalinFly
+import com.quicklink.javalinfly.annotation.JavalinFlyInjector
+import com.quicklink.javalinfly.kotlin.openapi
+import com.quicklink.javalinfly.openapi.model.Servers
 import io.javalin.Javalin
+import io.javalin.security.RouteRole
+
+enum class MyRoles : RouteRole {
+    GUEST,
+    USER,
+    ADMIN
+}
+
+
 
 @JavalinFlyInjector(
-    rolesClass = MyRoles::class
+    rolesClass = MyRoles::class,
+    generateDocumentation = false
 )
 fun main() {
     val app = Javalin.create()
@@ -21,8 +31,14 @@ fun main() {
         it.openapi {
             info.title = "My App"
             servers = listOf(
-                Servers("http://localhost:7070/api/v1", "This is localhost server"),
-                Servers("https://domain.com/api/v1", "Cloud server")
+                Servers(
+                    "http://localhost:7070/api/v1",
+                    "This is localhost server"
+                ),
+                Servers(
+                    "https://domain.com/api/v1",
+                    "Cloud server"
+                )
             )
         }
     }
