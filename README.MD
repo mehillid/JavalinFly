@@ -55,23 +55,28 @@ Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
 #### Gradle
 
 - Groovy DSL
+
     - Dependency
+  
     ```groovy
     implementation 'com.github.qlsolutions.JavalinFly:javalinfly-core:${javalinfly-version}'
     ```
 
     - Annotation processor
+  
     ```groovy
     annotationProcessor 'com.github.qlsolutions.JavalinFly:javalinfly-core:${javalinfly-version}'
     ```
   
     - *Optionally also the kotlin module*
+  
     ```groovy
     implementation 'com.github.qlsolutions.JavalinFly:javalinfly-kotlin:${javalinfly-version}'
     ```
     
 
 - Kotlin DSL
+
     - Dependency
     ```groovy
     implementation("com.github.qlsolutions.JavalinFly:javalinfly-core:${javalinfly-version}")
@@ -86,3 +91,4 @@ Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
     ```groovy
     implementation("com.github.qlsolutions.JavalinFly:javalinfly-kotlin:${javalinfly-version}")
     ```
+  
