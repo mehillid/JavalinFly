@@ -324,7 +324,7 @@ public class ControllersRound extends Round {
         for (VariableElement variableElement : executableElement.getParameters()) {
 
           String nameParameter = variableElement.getSimpleName().toString();
-          String typeParameter = variableElement.asType().toString();
+          String typeParameter = ProcessorUtil.getClassNameWithoutAnnotations(variableElement.asType());
           String classParameter = typeParameter.split("<")[0];
 
           Body body = variableElement.getAnnotation(Body.class);
@@ -384,6 +384,10 @@ public class ControllersRound extends Round {
 
           Path path = variableElement.getAnnotation(Path.class);
           if (path != null) {
+            if (!typeParameter.equals(String.class.getName())) {
+              messager.error(variableElement, "Path parameter '%s' must be a String", nameParameter);
+              return;
+            }
 
             endpointPath.append("/{").append(nameParameter).append("}");
             parametersCall.add(nameParameter);
@@ -396,6 +400,10 @@ public class ControllersRound extends Round {
 
           Query query = variableElement.getAnnotation(Query.class);
           if (query != null) {
+            if (!typeParameter.equals(String.class.getName())) {
+              messager.error(variableElement, "Query parameter '%s' must be a String", nameParameter);
+              return;
+            }
 
             parametersCall.add(nameParameter);
 
