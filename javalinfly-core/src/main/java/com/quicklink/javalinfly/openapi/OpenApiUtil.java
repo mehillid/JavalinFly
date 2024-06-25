@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
@@ -34,125 +35,101 @@ public class OpenApiUtil {
     this.messager = messager;
   }
 
-  public Schema classToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path,
-      boolean request, boolean createSchema) {
+  public Schema classToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path, boolean request, boolean createSchema, Set<TypeMirror> processedTypes) {
+    if (processedTypes.contains(typeMirror)) {
+      // Return a placeholder schema to avoid infinite recursion
+      return Schema.builder().type("object").description("Cyclic reference detected").build();
+    }
+    processedTypes.add(typeMirror);
 
-    Element element = ProcessorUtil.asTypeElement(typeUtils, typeMirror);
-
-//    messager.warning("Path '%s', Type '%s', element '%s', kind '%s'", path, typeMirror, element,
-//        element.getKind().toString());
+    ProcessorUtil.asTypeElement(this.typeUtils, typeMirror);
     if (typeMirror.getKind() == TypeKind.TYPEVAR) {
-      typeMirror = ((TypeVariable) typeMirror).getUpperBound();
+      typeMirror = ((TypeVariable)typeMirror).getUpperBound();
     }
 
-    if (!(typeMirror instanceof DeclaredType)) {
+    if (!(typeMirror instanceof DeclaredType declaredType)) {
       throw new IllegalArgumentException("Unsupported type: " + typeMirror);
-    }
-
-    DeclaredType declaredType = (DeclaredType) typeMirror;
-    TypeElement classElement = (TypeElement) declaredType.asElement();
-
-    Schema schema = new Schema();
-
-    String nameClass = classElement.getSimpleName().toString();
-    if (schemas.containsKey(nameClass)) {
-//      messager.warning("Key already contained...");
-
-      return Schema.builder().$ref(Schema.schemaRef(nameClass)).build();
-    }
-    if (createSchema) {
-      schemas.put(nameClass, schema);
-    }
-
-    schema.description = "A JSON object containing a generic class information";
-
-    if (isCollection(classElement)) {
-      schema.type = "array";
-      TypeMirror genericListType = getGenericType(declaredType, 0);
-      if (genericListType != null) {
-        Element genericElement = typeUtils.asElement(genericListType);
-//        messager.warning("Generic mirror %s, element %s", genericListType, genericElement);
-        schema.items = classToSchema(schemas, genericListType, path, request, false);
-      } else {
-        schema.items = Schema.builder().type("object").description("Unknown type").build();
-      }
-      return schema;
-    } else if (isMap(classElement)) {
-      schema.type = "object";
-      TypeMirror keyType = getGenericType(declaredType, 0);
-      TypeMirror valueType = getGenericType(declaredType, 1);
-
-      assert keyType != null;
-      if (!ProcessorUtil.getClassNameWithoutAnnotations(keyType).equals("java.lang.String")) {
-        throw new IllegalStateException("Invalid map at path " + path + ", key must be a String");
-      }
-      schema.additionalProperties = classToSchema(schemas, valueType, path, request, false);
-      return schema;
     } else {
-      schema.type = "object";
-      schema.description = "This is the class " + classElement.getSimpleName();
-      schema.properties = new HashMap<>();
-    }
-
-    List<String> required = new ArrayList<>();
-    List<? extends Element> members = elementUtils.getAllMembers(classElement);
-//    messager.warning("Starting processing variables...");
-
-    for (Element member : members) {
-      if (member.getKind() == ElementKind.FIELD) {
-        VariableElement variableElement = (VariableElement) member;
-        JsonIgnore jsonIgnore = variableElement.getAnnotation(JsonIgnore.class);
-        if (jsonIgnore != null) {
-          continue;
+      TypeElement classElement = (TypeElement) declaredType.asElement();
+      Schema schema = new Schema();
+      String nameClass = classElement.getSimpleName().toString();
+      if (schemas.containsKey(nameClass)) {
+        return Schema.builder().$ref(Schema.schemaRef(nameClass)).build();
+      } else {
+        if (createSchema) {
+          schemas.put(nameClass, schema);
         }
 
-        JsonProperty jsonProperty = variableElement.getAnnotation(JsonProperty.class);
-        if (jsonProperty != null) {
-          if (request && jsonProperty.access() == JsonProperty.Access.READ_ONLY) {
-            continue;
+        schema.description = "A JSON object containing a generic class information";
+        TypeMirror keyType;
+        if (this.isCollection(classElement)) {
+          schema.type = "array";
+          keyType = this.getGenericType(declaredType, 0);
+          if (keyType != null) {
+            this.typeUtils.asElement(keyType);
+            schema.items = this.classToSchema(schemas, keyType, path, request, false, processedTypes);
+          } else {
+            schema.items = Schema.builder().type("object").description("Unknown type").build();
           }
 
-          if (!request && jsonProperty.access() == JsonProperty.Access.WRITE_ONLY) {
-            continue;
+          return schema;
+        } else if (this.isMap(classElement)) {
+          schema.type = "object";
+          keyType = this.getGenericType(declaredType, 0);
+          TypeMirror valueType = this.getGenericType(declaredType, 1);
+
+          assert keyType != null;
+
+          if (!ProcessorUtil.getClassNameWithoutAnnotations(keyType).equals("java.lang.String")) {
+            throw new IllegalStateException("Invalid map at path " + path + ", key must be a String");
+          } else {
+            schema.additionalProperties = this.classToSchema(schemas, valueType, path, request, false, processedTypes);
+            return schema;
           }
+        } else {
+          schema.type = "object";
+          schema.description = "This is the class " + classElement.getSimpleName();
+          schema.properties = new HashMap<>();
+          List<String> required = new ArrayList<>();
+          List<? extends Element> members = this.elementUtils.getAllMembers(classElement);
+          for (Element member : members) {
+            if (member.getKind() != ElementKind.FIELD) continue;
+
+            VariableElement variableElement = (VariableElement) member;
+            JsonIgnore jsonIgnore = variableElement.getAnnotation(JsonIgnore.class);
+            if (jsonIgnore != null) continue;
+
+            JsonProperty jsonProperty = variableElement.getAnnotation(JsonProperty.class);
+            if (jsonProperty != null && (request && jsonProperty.access() == JsonProperty.Access.READ_ONLY || !request && jsonProperty.access() == JsonProperty.Access.WRITE_ONLY)) {
+              continue;
+            }
+
+            if (variableElement.getAnnotation(NotNull.class) != null) {
+              required.add(variableElement.getSimpleName().toString());
+            }
+
+            OpenApiProperty openApiProperty = variableElement.getAnnotation(OpenApiProperty.class);
+            String exampleProperty = openApiProperty != null ? openApiProperty.defaultValue() : null;
+            TypeMirror returnType = variableElement.asType();
+            Schema fieldSchema = this.typeMirrorToSchema(schemas, returnType, path, request, processedTypes);
+            if (exampleProperty != null) {
+              fieldSchema.example = exampleProperty;
+            }
+
+            schema.properties.put(variableElement.getSimpleName().toString(), fieldSchema);
+          }
+
+          if (!required.isEmpty()) {
+            schema.required = required;
+          }
+
+          return schema;
         }
-//
-        if(variableElement.getAnnotation(NotNull.class) != null) {
-          required.add(variableElement.getSimpleName().toString());
-        }
-
-        OpenApiProperty openApiProperty = variableElement.getAnnotation(OpenApiProperty.class);
-        String exampleProperty = openApiProperty != null ? openApiProperty.defaultValue() : null;
-
-//        if (!variableElement.asType().getKind().isPrimitive() && !variableElement.asType()
-//            .toString().startsWith("java.lang.")) {
-//          required.add(variableElement.getSimpleName().toString());
-//        }
-
-//        messager.warning("Variable '%s'", variableElement.getSimpleName().toString());
-
-        TypeMirror returnType = variableElement.asType();
-        Schema fieldSchema = typeMirrorToSchema(schemas, returnType, path, request);
-
-        if (exampleProperty != null) {
-          fieldSchema.example = exampleProperty;
-        }
-
-        schema.properties.put(variableElement.getSimpleName().toString(), fieldSchema);
       }
     }
-
-    if (!required.isEmpty()) {
-      schema.required = required;
-    }
-
-    return schema;
   }
 
-  private Schema typeMirrorToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path,
-      boolean request) {
-//    messager.warning("typeMirrorToSchema, path '%s', typeMirror '%s'", path, typeMirror);
-
+  private Schema typeMirrorToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path, boolean request, Set<TypeMirror> processedTypes) {
     switch (typeMirror.getKind()) {
       case BOOLEAN:
         return Schema.builder().type("boolean").build();
@@ -164,29 +141,22 @@ public class OpenApiUtil {
         return Schema.builder().type("number").build();
       case DECLARED:
         String typeName = ProcessorUtil.getClassNameWithoutAnnotations(typeMirror);
-//        messager.warning("TypeName UTIL '%s'", typeName);
         if (typeName.equals("java.lang.String")) {
           return Schema.builder().type("string").build();
         } else if (typeName.equals("java.util.UUID")) {
           return Schema.builder().type("string").format("uuid").build();
         } else {
-          Element returnTypeElement = typeUtils.asElement(typeMirror);
-//          messager.warning("UTIL function return '%s', element '%s'", typeMirror, returnTypeElement);
-
-          if (returnTypeElement instanceof TypeElement && isEnum((TypeElement) returnTypeElement)) {
-            return Schema.builder().type("string")
-                ._enum(getEnumValues((TypeElement) returnTypeElement)).build();
-          } else {
-            return classToSchema(schemas, typeMirror, path, request,false);
+          Element returnTypeElement = this.typeUtils.asElement(typeMirror);
+          if (returnTypeElement instanceof TypeElement && this.isEnum((TypeElement) returnTypeElement)) {
+            return Schema.builder().type("string")._enum(this.getEnumValues((TypeElement) returnTypeElement)).build();
           }
+
+          return this.classToSchema(schemas, typeMirror, path, request, false, processedTypes);
         }
       default:
-        messager.error("Unsupported field type %s of path %s", typeMirror.toString(), path);
-//        throw new IllegalArgumentException("Unsupported field type: " + typeMirror);
-
+        this.messager.error("Unsupported field type %s of path %s", new Object[]{typeMirror.toString(), path});
         return null;
     }
-
   }
 
   private TypeMirror getGenericType(DeclaredType declaredType, int index) {
