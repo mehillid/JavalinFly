@@ -17,7 +17,7 @@ enum class MyRoles : RouteRole {
 
 @JavalinFlyInjector(
     rolesClass = MyRoles::class,
-    generateDocumentation = false
+    generateDocumentation = true
 )
 fun main() {
     val app = Javalin.create()

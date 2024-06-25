@@ -222,7 +222,7 @@ public class ControllersRound extends Round {
                 {
                   TypeElement typeOk = ProcessorUtil.asTypeElement(typeUtils, returnTypeOk);
                   var schema = openApiUtil.classToSchema(schemaMap,
-                      returnTypeOk, endpointPath.toString(), true, true);
+                      returnTypeOk, endpointPath.toString(), true, true, new HashSet<>());
 
                   returnOkSchema = typeOk.getSimpleName().toString();
                 }
@@ -231,7 +231,7 @@ public class ControllersRound extends Round {
                 {
                   TypeElement typeErr = ProcessorUtil.asTypeElement(typeUtils, returnTypeErr);
                   var schema = openApiUtil.classToSchema(schemaMap,
-                      returnTypeErr, endpointPath.toString(), true, true);
+                      returnTypeErr, endpointPath.toString(), true, true, new HashSet<>());
 
                   returnErrSchema = typeErr.getSimpleName().toString();
                 }
@@ -260,7 +260,7 @@ public class ControllersRound extends Round {
                 {
                   TypeElement typeErr = ProcessorUtil.asTypeElement(typeUtils, returnTypeErr);
                   var schema = openApiUtil.classToSchema(schemaMap,
-                      returnTypeErr, endpointPath.toString(), true, true);
+                      returnTypeErr, endpointPath.toString(), true, true, new HashSet<>());
 
                   returnErrSchema = typeErr.getSimpleName().toString();
                 }
@@ -290,7 +290,7 @@ public class ControllersRound extends Round {
                 {
                   TypeElement typeErr = ProcessorUtil.asTypeElement(typeUtils, returnTypeErr);
                   var schema = openApiUtil.classToSchema(schemaMap,
-                      returnTypeErr, endpointPath.toString(), true, true);
+                      returnTypeErr, endpointPath.toString(), true, true, new HashSet<>());
 
                   returnErrSchema = typeErr.getSimpleName().toString();
                 }
@@ -370,7 +370,7 @@ public class ControllersRound extends Round {
                       variableElement.asType());
                   Schema schema = openApiUtil.classToSchema(schemaMap,
                       variableElement.asType(),
-                      endpointPath.toString(), true, true);
+                      endpointPath.toString(), true, true, new HashSet<>());
 
                   bodySchema = typeBodyName.getSimpleName().toString();
                 }
