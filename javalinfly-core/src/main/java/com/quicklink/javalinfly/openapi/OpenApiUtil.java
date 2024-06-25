@@ -152,6 +152,10 @@ public class OpenApiUtil {
           return Schema.builder().type("string").build();
         } else if (typeName.equals("java.util.UUID")) {
           return Schema.builder().type("string").format("uuid").build();
+        } else if(typeName.equals("java.lang.Integer")  || typeName.equals("java.lang.Long")) {
+          return Schema.builder().type("integer").build();
+        } else if(typeName.equals("java.lang.Float") || typeName.equals("java.lang.Double")) {
+          return Schema.builder().type("number").build();
         } else {
           Element returnTypeElement = this.typeUtils.asElement(typeMirror);
           if (returnTypeElement instanceof TypeElement && this.isEnum((TypeElement) returnTypeElement)) {
