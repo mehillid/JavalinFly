@@ -44,11 +44,17 @@ public class OpenApiUtil {
 //    }
 
 
+    // if is primitive or string
+    if(isKnownType(typeMirror)) {
+      return this.typeMirrorToSchema(schemas, typeMirror, path, request);
+    }
 
     ProcessorUtil.asTypeElement(this.typeUtils, typeMirror);
     if (typeMirror.getKind() == TypeKind.TYPEVAR) {
       typeMirror = ((TypeVariable)typeMirror).getUpperBound();
     }
+
+
 
     if (!(typeMirror instanceof DeclaredType declaredType)) {
       throw new IllegalArgumentException("Unsupported type: " + typeMirror);
@@ -152,6 +158,10 @@ public class OpenApiUtil {
           return Schema.builder().type("string").build();
         } else if (typeName.equals("java.util.UUID")) {
           return Schema.builder().type("string").format("uuid").build();
+        } else if(typeName.equals("java.lang.Integer")  || typeName.equals("java.lang.Long")) {
+          return Schema.builder().type("integer").build();
+        } else if(typeName.equals("java.lang.Float") || typeName.equals("java.lang.Double")) {
+          return Schema.builder().type("number").build();
         } else {
           Element returnTypeElement = this.typeUtils.asElement(typeMirror);
           if (returnTypeElement instanceof TypeElement && this.isEnum((TypeElement) returnTypeElement)) {
@@ -162,10 +172,34 @@ public class OpenApiUtil {
         }
       default:
         this.messager.error("Unsupported field type %s of path %s", new Object[]{typeMirror.toString(), path});
+
         return null;
     }
   }
+  private boolean isKnownType(TypeMirror typeMirror) {
+    switch (typeMirror.getKind()) {
+      case BOOLEAN, INT, LONG, FLOAT, DOUBLE:
+        return true;
+      case DECLARED:
+        String typeName = ProcessorUtil.getClassNameWithoutAnnotations(typeMirror);
+        switch (typeName) {
+          case "java.lang.String", "java.util.UUID", "java.lang.Integer", "java.lang.Long", "java.lang.Float", "java.lang.Double" -> {
+            return true;
+          }
+          default -> {
+            Element returnTypeElement = this.typeUtils.asElement(typeMirror);
+            if (returnTypeElement instanceof TypeElement && this.isEnum(
+                (TypeElement) returnTypeElement)) {
+              return true;
+            }
 
+            return false;
+          }
+        }
+      default:
+        return false;
+    }
+  }
   private TypeMirror getGenericType(DeclaredType declaredType, int index) {
     List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
     if (typeArguments.size() > index) {
