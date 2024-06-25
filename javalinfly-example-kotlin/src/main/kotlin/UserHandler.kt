@@ -28,13 +28,7 @@ class UserHandler {
         ok = user
     }
     class Users {
-        var users: List<User>? = null
-
-
-        constructor()
-        constructor(users: List<User>?) {
-            this.users = users
-        }
+        var users: LinkedHashMap<String, User>? = null
     }
 
     class User {

@@ -35,33 +35,35 @@ public class OpenApiUtil {
     this.messager = messager;
   }
 
-  public Schema classToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path, boolean request, boolean createSchema) {
+  public Schema classToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path,
+      boolean request, boolean createSchema) {
     messager.warning("Analyzing schema '%s' of path '%s'", typeMirror.toString(), path);
 
 //
 //    if(ProcessorUtil.getClassNameWithoutAnnotations(typeMirror).startsWith("java.")) {
 //      return Schema.builder().type("string").example("Class: " + typeMirror.toString()).build();
 //    }
-
+    String typeName = ProcessorUtil.getClassNameWithoutAnnotations(typeMirror);
 
     // if is primitive or string
-    if(isKnownType(typeMirror)) {
+    if (isKnownType(typeMirror)) {
       return this.typeMirrorToSchema(schemas, typeMirror, path, request);
     }
 
     ProcessorUtil.asTypeElement(this.typeUtils, typeMirror);
     if (typeMirror.getKind() == TypeKind.TYPEVAR) {
-      typeMirror = ((TypeVariable)typeMirror).getUpperBound();
+      typeMirror = ((TypeVariable) typeMirror).getUpperBound();
     }
 
-
-
     if (!(typeMirror instanceof DeclaredType declaredType)) {
-      throw new IllegalArgumentException("Unsupported type: " + typeMirror);
+      messager.error("Unsupported type: " + typeMirror);
+      return null;
     } else {
       TypeElement classElement = (TypeElement) declaredType.asElement();
       Schema schema = new Schema();
       String nameClass = classElement.getSimpleName().toString();
+
+      messager.warning("\tclassElement '%s'", classElement);
       if (schemas.containsKey(nameClass)) {
         return Schema.builder().$ref(Schema.schemaRef(nameClass)).build();
       } else {
@@ -71,11 +73,29 @@ public class OpenApiUtil {
 
         schema.description = "A JSON object containing a generic class information";
         TypeMirror keyType;
-        if(this.isObject(classElement)) {
+        if (this.isObject(classElement)) {
           schema.type = "object";
           schema.description = "Unknown type";
           return schema;
-        } else if (this.isCollection(classElement)) {
+//        } else if (typeName.startsWith("java.util.Map") || typeName.startsWith("java.util.HashMap")
+//            || typeName.startsWith("java.util.LinkedHashMap")){
+        } else if (isMap(typeMirror)){
+          messager.warning("\t\t** is map");
+          schema.type = "object";
+          keyType = this.getGenericType(declaredType, 0);
+          TypeMirror valueType = this.getGenericType(declaredType, 1);
+
+          assert keyType != null;
+
+          if (!ProcessorUtil.getClassNameWithoutAnnotations(keyType).equals("java.lang.String")) {
+            throw new IllegalStateException(
+                "Invalid map at path " + path + ", key must be a String");
+          } else {
+            schema.additionalProperties = this.classToSchema(schemas, valueType, path, request,
+                false);
+            return schema;
+          }
+        } else if (this.isCollection(typeMirror)) {
           schema.type = "array";
           keyType = this.getGenericType(declaredType, 0);
           if (keyType != null) {
@@ -86,34 +106,28 @@ public class OpenApiUtil {
           }
 
           return schema;
-        } else if (this.isMap(classElement)) {
-          schema.type = "object";
-          keyType = this.getGenericType(declaredType, 0);
-          TypeMirror valueType = this.getGenericType(declaredType, 1);
-
-          assert keyType != null;
-
-          if (!ProcessorUtil.getClassNameWithoutAnnotations(keyType).equals("java.lang.String")) {
-            throw new IllegalStateException("Invalid map at path " + path + ", key must be a String");
-          } else {
-            schema.additionalProperties = this.classToSchema(schemas, valueType, path, request, false);
-            return schema;
-          }
         } else {
+
           schema.type = "object";
           schema.description = "This is the class " + classElement.getSimpleName();
           schema.properties = new HashMap<>();
           List<String> required = new ArrayList<>();
           List<? extends Element> members = this.elementUtils.getAllMembers(classElement);
           for (Element member : members) {
-            if (member.getKind() != ElementKind.FIELD) continue;
+            if (member.getKind() != ElementKind.FIELD) {
+              continue;
+            }
 
             VariableElement variableElement = (VariableElement) member;
             JsonIgnore jsonIgnore = variableElement.getAnnotation(JsonIgnore.class);
-            if (jsonIgnore != null) continue;
+            if (jsonIgnore != null) {
+              continue;
+            }
 
             JsonProperty jsonProperty = variableElement.getAnnotation(JsonProperty.class);
-            if (jsonProperty != null && (request && jsonProperty.access() == JsonProperty.Access.READ_ONLY || !request && jsonProperty.access() == JsonProperty.Access.WRITE_ONLY)) {
+            if (jsonProperty != null && (
+                request && jsonProperty.access() == JsonProperty.Access.READ_ONLY
+                    || !request && jsonProperty.access() == JsonProperty.Access.WRITE_ONLY)) {
               continue;
             }
 
@@ -122,7 +136,8 @@ public class OpenApiUtil {
             }
 
             OpenApiProperty openApiProperty = variableElement.getAnnotation(OpenApiProperty.class);
-            String exampleProperty = openApiProperty != null ? openApiProperty.defaultValue() : null;
+            String exampleProperty =
+                openApiProperty != null ? openApiProperty.defaultValue() : null;
             TypeMirror returnType = variableElement.asType();
             Schema fieldSchema = this.typeMirrorToSchema(schemas, returnType, path, request);
             if (exampleProperty != null) {
@@ -142,7 +157,8 @@ public class OpenApiUtil {
     }
   }
 
-  private Schema typeMirrorToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path, boolean request) {
+  private Schema typeMirrorToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path,
+      boolean request) {
     switch (typeMirror.getKind()) {
       case BOOLEAN:
         return Schema.builder().type("boolean").build();
@@ -158,24 +174,28 @@ public class OpenApiUtil {
           return Schema.builder().type("string").build();
         } else if (typeName.equals("java.util.UUID")) {
           return Schema.builder().type("string").format("uuid").build();
-        } else if(typeName.equals("java.lang.Integer")  || typeName.equals("java.lang.Long")) {
+        } else if (typeName.equals("java.lang.Integer") || typeName.equals("java.lang.Long")) {
           return Schema.builder().type("integer").build();
-        } else if(typeName.equals("java.lang.Float") || typeName.equals("java.lang.Double")) {
+        } else if (typeName.equals("java.lang.Float") || typeName.equals("java.lang.Double")) {
           return Schema.builder().type("number").build();
         } else {
           Element returnTypeElement = this.typeUtils.asElement(typeMirror);
-          if (returnTypeElement instanceof TypeElement && this.isEnum((TypeElement) returnTypeElement)) {
-            return Schema.builder().type("string")._enum(this.getEnumValues((TypeElement) returnTypeElement)).build();
+          if (returnTypeElement instanceof TypeElement && this.isEnum(
+              (TypeElement) returnTypeElement)) {
+            return Schema.builder().type("string")
+                ._enum(this.getEnumValues((TypeElement) returnTypeElement)).build();
           }
 
           return this.classToSchema(schemas, typeMirror, path, request, false);
         }
       default:
-        this.messager.error("Unsupported field type %s of path %s", new Object[]{typeMirror.toString(), path});
+        this.messager.error("Unsupported field type %s of path %s",
+            new Object[]{typeMirror.toString(), path});
 
         return null;
     }
   }
+
   private boolean isKnownType(TypeMirror typeMirror) {
     switch (typeMirror.getKind()) {
       case BOOLEAN, INT, LONG, FLOAT, DOUBLE:
@@ -200,6 +220,7 @@ public class OpenApiUtil {
         return false;
     }
   }
+
   private TypeMirror getGenericType(DeclaredType declaredType, int index) {
     List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
     if (typeArguments.size() > index) {
@@ -219,16 +240,51 @@ public class OpenApiUtil {
     return null;
   }
 
-  private boolean isCollection(TypeElement classElement) {
-    return typeUtils.isAssignable(classElement.asType(),
-        elementUtils.getTypeElement("java.util.List").asType()) ||
-        typeUtils.isAssignable(classElement.asType(),
-            elementUtils.getTypeElement("java.util.Set").asType());
+  private boolean isCollection(TypeMirror tm) {
+    TypeMirror list = typeUtils.erasure(elementUtils.getTypeElement("java.util.List").asType());
+    TypeMirror set = typeUtils.erasure(elementUtils.getTypeElement("java.util.Set").asType());
+
+    return typeUtils.isAssignable(tm, list) || typeUtils.isAssignable(tm, set);
   }
 
-  private boolean isMap(TypeElement classElement) {
-    return typeUtils.isAssignable(classElement.asType(),
-        elementUtils.getTypeElement("java.util.Map").asType());
+
+  public boolean isMap(TypeMirror tm) {
+    TypeMirror map = typeUtils.erasure(elementUtils.getTypeElement("java.util.Map").asType());
+    return typeUtils.isAssignable(tm, map);
+  }
+
+  private boolean isSubtypeOf(TypeMirror type, TypeMirror targetType) {
+    if (typeUtils.isAssignable(type, targetType)) {
+      return true;
+    }
+
+    if (type.getKind() != TypeKind.DECLARED) {
+      return false;
+    }
+
+    DeclaredType declaredType = (DeclaredType) type;
+    TypeElement typeElement = (TypeElement) declaredType.asElement();
+
+    // Check if any of the superclasses or interfaces are assignable to targetType
+    return checkSuperTypes(typeElement, targetType);
+  }
+
+  private boolean checkSuperTypes(TypeElement typeElement, TypeMirror targetType) {
+    // Check superclasses
+    TypeMirror superclass = typeElement.getSuperclass();
+    if (superclass.getKind() != TypeKind.NONE && isSubtypeOf(superclass, targetType)) {
+      return true;
+    }
+
+    // Check interfaces
+    List<? extends TypeMirror> interfaces = typeElement.getInterfaces();
+    for (TypeMirror iface : interfaces) {
+      if (isSubtypeOf(iface, targetType)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private boolean isObject(TypeElement classElement) {
