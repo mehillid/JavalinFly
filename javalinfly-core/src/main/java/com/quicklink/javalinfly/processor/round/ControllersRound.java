@@ -52,7 +52,7 @@ public class ControllersRound extends Round {
 
   private final MessagerRound messager;
   private final RoundEnvironment roundEnv;
-  private final TypeMirror rolesTypeMirror;
+  public final TypeMirror rolesTypeMirror;
   private final JavalinFlyInjector injector;
 
   public Map<String, ExecutableElement> selectedRoles = new HashMap<>();

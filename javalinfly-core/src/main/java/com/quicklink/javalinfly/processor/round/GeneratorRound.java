@@ -8,6 +8,7 @@ import com.quicklink.javalinfly.openapi.SwaggerUIHtmlGenerator;
 import com.quicklink.javalinfly.openapi.model.OpenApi;
 import com.quicklink.javalinfly.processor.JavalinFlyConfig;
 import com.quicklink.javalinfly.processor.Round;
+import com.quicklink.javalinfly.processor.utils.ProcessorUtil;
 import io.javalin.Javalin;
 import java.io.IOException;
 import java.io.Writer;
@@ -15,6 +16,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.tools.JavaFileObject;
@@ -64,6 +66,11 @@ public class GeneratorRound extends Round {
   private void generateClass(Element element) {
     String openApiStatements = "\n";
     if (javalinFlyInjectorRound.javalinFlyInjectorAnn.generateDocumentation()) {
+      String allRoles = String.join(",", javalinFlyInjectorRound.injectorRoles.stream()
+          .map(roleName -> ProcessorUtil.getClassNameWithoutAnnotations(
+              javalinFlyInjectorRound.rolesTypeMirror) + "." + roleName)
+          .collect(Collectors.toSet()));
+
       openApiStatements =
           "        {\n" +
               "            OpenApiTranslator openApiTranslator = new OpenApiTranslator();\n" +
@@ -78,7 +85,7 @@ public class GeneratorRound extends Round {
               "        {\n" +
               "            javalin.addHandler(HandlerType.GET, \"/openapi\", ctx -> {\n" +
               "                 ctx.html(Vars.swaggerUi());\n" +
-              "            });\n" +
+              "            }, new RouteRole[]{%s});\n".formatted(allRoles) +
               "        }\n";
     }
 
