@@ -17,6 +17,7 @@ public class Bootstrap {
 
     @JavalinFlyInjector(
         rolesClass = MyRoles.class,
+        defaultRoles = {"USER", "ADMIN"},
         generateDocumentation = false
     )
     public static void main(String[] args) {

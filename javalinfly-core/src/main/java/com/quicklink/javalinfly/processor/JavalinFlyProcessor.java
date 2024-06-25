@@ -15,7 +15,7 @@ import java.util.*;
 
 @SupportedAnnotationTypes({"com.quicklink.javalinfly.annotation.JavalinFlyInjector",
     "com.quicklink.javalinfly.annotation.Controller"})
-@SupportedSourceVersion(SourceVersion.RELEASE_11)
+@SupportedSourceVersion(SourceVersion.RELEASE_17)
 @AutoService(Processor.class)
 public class JavalinFlyProcessor extends AbstractProcessor {
 
