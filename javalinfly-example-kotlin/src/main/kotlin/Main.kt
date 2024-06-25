@@ -20,10 +20,20 @@ enum class MyRoles : RouteRole {
     generateDocumentation = true
 )
 fun main() {
-    val app = Javalin.create()
-        .get("/") { ctx -> ctx.result("Hello World") }
-        .start(7070)
+    val app = Javalin.create { c ->
 
+        c.accessManager { handler, ctx, routeRoles ->
+            val role: MyRoles = MyRoles.GUEST;
+            if (routeRoles.contains(role)) {
+                handler.handle(ctx)
+            } else {
+                ctx.status(401).result("Unauthorized")
+            }
+        }
+    }
+
+    app.get("/") { ctx -> ctx.result("Hello World") }
+    app.start(7070)
 
     JavalinFly.inject(app) {
 
@@ -41,5 +51,7 @@ fun main() {
                 )
             )
         }
+
+
     }
 } // https://stackoverflow.com/questions/38926255/maven-annotation-processing-processor-not-found

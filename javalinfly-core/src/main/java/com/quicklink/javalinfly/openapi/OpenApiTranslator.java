@@ -52,7 +52,7 @@ public class OpenApiTranslator {
       TypeReference<LinkedHashMap<String, Schema>> typeRef = new TypeReference<>() {
       };
 
-      schemas = MAPPER.readValue(new String(Base64.getDecoder().decode(schemasEncoded)), typeRef);
+      schemas = MAPPER.readValue(schemasEncoded, typeRef);
     } catch (JsonProcessingException e) {
       throw new UncheckedIOException(e);
     }

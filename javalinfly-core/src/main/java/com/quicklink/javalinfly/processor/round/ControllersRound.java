@@ -3,6 +3,7 @@ package com.quicklink.javalinfly.processor.round;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.quicklink.javalinfly.annotation.Body;
 import com.quicklink.javalinfly.annotation.Controller;
 import com.quicklink.javalinfly.annotation.Delete;
@@ -62,6 +63,8 @@ public class ControllersRound extends Round {
   public final Set<String> handlersField = new HashSet<>();
   public final List<String> openApiStatements = new ArrayList<>();
 
+
+  public String schemasEncoded;
 
   public ControllersRound(Types typeUtils, Elements elementUtils, MessagerRound messager,
       RoundEnvironment roundEnv,
@@ -460,10 +463,12 @@ public class ControllersRound extends Round {
     if(injector.generateDocumentation()) {
       var MAPPER = new ObjectMapper();
       MAPPER.setSerializationInclusion(Include.NON_NULL);
+      MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
+
       try {
-        String schemasEncoded = Base64.getEncoder()
-            .encodeToString(MAPPER.writeValueAsString(schemaMap).getBytes());
-        openApiStatements.add(0, "            openApiTranslator.decodeSchemas(\"" + schemasEncoded + "\");\n");
+        schemasEncoded = MAPPER.writeValueAsString(schemaMap);
+//        openApiStatements.add(0, "            openApiTranslator.decodeSchemas(\"" + schemasEncoded + "\");\n");
+        openApiStatements.add(0, "            openApiTranslator.decodeSchemas(Vars.openApiSpec());\n");
       } catch (JsonProcessingException e) {
         throw new RuntimeException(e);
       }

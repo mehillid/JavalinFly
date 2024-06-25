@@ -38,10 +38,11 @@ public class OpenApiUtil {
   public Schema classToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path, boolean request, boolean createSchema) {
     messager.warning("Analyzing schema '%s' of path '%s'", typeMirror.toString(), path);
 
+//
+//    if(ProcessorUtil.getClassNameWithoutAnnotations(typeMirror).startsWith("java.")) {
+//      return Schema.builder().type("string").example("Class: " + typeMirror.toString()).build();
+//    }
 
-    if(ProcessorUtil.getClassNameWithoutAnnotations(typeMirror).startsWith("java.")) {
-      return Schema.builder().type("string").example("Class: " + typeMirror.toString()).build();
-    }
 
 
     ProcessorUtil.asTypeElement(this.typeUtils, typeMirror);
@@ -64,7 +65,11 @@ public class OpenApiUtil {
 
         schema.description = "A JSON object containing a generic class information";
         TypeMirror keyType;
-        if (this.isCollection(classElement)) {
+        if(this.isObject(classElement)) {
+          schema.type = "object";
+          schema.description = "Unknown type";
+          return schema;
+        } else if (this.isCollection(classElement)) {
           schema.type = "array";
           keyType = this.getGenericType(declaredType, 0);
           if (keyType != null) {
@@ -190,6 +195,11 @@ public class OpenApiUtil {
   private boolean isMap(TypeElement classElement) {
     return typeUtils.isAssignable(classElement.asType(),
         elementUtils.getTypeElement("java.util.Map").asType());
+  }
+
+  private boolean isObject(TypeElement classElement) {
+    return typeUtils.isSameType(classElement.asType(),
+        elementUtils.getTypeElement("java.lang.Object").asType());
   }
 
   private boolean isEnum(TypeElement classElement) {

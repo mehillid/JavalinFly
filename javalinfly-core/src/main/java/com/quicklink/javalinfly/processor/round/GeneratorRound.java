@@ -19,7 +19,9 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
+import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
+import javax.tools.StandardLocation;
 
 public class GeneratorRound extends Round {
 
@@ -78,8 +80,8 @@ public class GeneratorRound extends Round {
               "            OpenApi openApi = openApiTranslator.build();\n" +
               "            config.openapi.edit(openApi);\n" +
               "            String openApiSpec = openApiTranslator.asString(openApi);\n" +
-              "            Vars.openApiSpec(openApiSpec);\n" +
-              "            Vars.swaggerUi(SwaggerUIHtmlGenerator.generateSwaggerUIHtml(Vars.openApiSpec()));\n"
+//              "            Vars.openApiSpec(openApiSpec);\n" +
+              "            Vars.swaggerUi(SwaggerUIHtmlGenerator.generateSwaggerUIHtml(openApiSpec));\n"
               +
               "        }\n" +
               "        {\n" +
@@ -87,6 +89,20 @@ public class GeneratorRound extends Round {
               "                 ctx.html(Vars.swaggerUi());\n" +
               "            }, new RouteRole[]{%s});\n".formatted(allRoles) +
               "        }\n";
+
+
+
+
+      try {
+        FileObject file = filer.createResource(StandardLocation.CLASS_OUTPUT, "", Vars.RESOURCE_FILE_SPEC);
+        try (Writer writer = file.openWriter()) {
+          writer.write(controllersRound.schemasEncoded);
+        }
+      } catch (IOException e) {
+        messager.error(element, "Error generating resource %s: %s", Vars.RESOURCE_FILE_SPEC , e.getMessage());
+
+      }
+
     }
 
     String source = "package " + PACKAGE_NAME + ";\n\n" +
@@ -122,6 +138,8 @@ public class GeneratorRound extends Round {
 
     Javalin app;
 
+
+
     try {
       JavaFileObject sourceFile = filer.createSourceFile(FULL_CLASS, element);
       try (Writer writer = sourceFile.openWriter()) {
@@ -131,6 +149,7 @@ public class GeneratorRound extends Round {
     } catch (IOException e) {
       messager.error(element, "Error generating class %s: %s", FULL_CLASS, e.getMessage());
     }
+
   }
 
 
