@@ -23,6 +23,7 @@ import com.quicklink.javalinfly.openapi.model.Path.PathMethod.Response;
 import com.quicklink.javalinfly.openapi.model.Schema;
 import com.quicklink.javalinfly.openapi.model.Security;
 import com.quicklink.javalinfly.openapi.model.Tag;
+import com.quicklink.javalinfly.processor.utils.JsonUtils;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,27 +36,19 @@ import org.jetbrains.annotations.Nullable;
 
 public class OpenApiTranslator {
 
-  private final ObjectMapper MAPPER;
   private final LinkedHashMap<String, Path> path_mapped = new LinkedHashMap<>();
   private final LinkedHashMap<String, Tag> tags = new LinkedHashMap<>();
   private LinkedHashMap<String, Schema> schemas = new LinkedHashMap<>();
 
   public OpenApiTranslator() {
-    MAPPER = new ObjectMapper();
-    MAPPER.setSerializationInclusion(Include.NON_NULL);
-    MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
 
   }
 
   public void decodeSchemas(String schemasEncoded) {
-    try {
-      TypeReference<LinkedHashMap<String, Schema>> typeRef = new TypeReference<>() {
-      };
+    TypeReference<LinkedHashMap<String, Schema>> typeRef = new TypeReference<>() {
+    };
 
-      schemas = MAPPER.readValue(schemasEncoded, typeRef);
-    } catch (JsonProcessingException e) {
-      throw new UncheckedIOException(e);
-    }
+    schemas = JsonUtils.get().deserialize(schemasEncoded, typeRef);
   }
 
   public void addPath(String path, String method, String[] roles, String summary,
@@ -241,14 +234,6 @@ public class OpenApiTranslator {
         .tags(tags.values())
         .build();
 
-  }
-
-  public String asString(OpenApi openApi) {
-    try {
-      return MAPPER.writeValueAsString(openApi);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
   }
 
 

@@ -21,6 +21,7 @@ import com.quicklink.javalinfly.exception.handler.impl.QueryParamNotFoundExcepti
 import com.quicklink.javalinfly.openapi.OpenApiUtil;
 import com.quicklink.javalinfly.openapi.model.Schema;
 import com.quicklink.javalinfly.processor.Round;
+import com.quicklink.javalinfly.processor.utils.JsonUtils;
 import com.quicklink.javalinfly.processor.utils.ProcessorUtil;
 import com.quicklink.javalinfly.processor.utils.StringUtils;
 import java.util.ArrayList;
@@ -461,17 +462,10 @@ public class ControllersRound extends Round {
 
 
     if(injector.generateDocumentation()) {
-      var MAPPER = new ObjectMapper();
-      MAPPER.setSerializationInclusion(Include.NON_NULL);
-      MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
 
-      try {
-        schemasEncoded = MAPPER.writeValueAsString(schemaMap);
+      schemasEncoded = JsonUtils.get().serialize(schemaMap);
 //        openApiStatements.add(0, "            openApiTranslator.decodeSchemas(\"" + schemasEncoded + "\");\n");
-        openApiStatements.add(0, "            openApiTranslator.decodeSchemas(Vars.openApiSpec());\n");
-      } catch (JsonProcessingException e) {
-        throw new RuntimeException(e);
-      }
+      openApiStatements.add(0, "            openApiTranslator.decodeSchemas(Vars.openApiSpec());\n");
     }
   }
 

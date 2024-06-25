@@ -8,6 +8,7 @@ import com.quicklink.javalinfly.openapi.SwaggerUIHtmlGenerator;
 import com.quicklink.javalinfly.openapi.model.OpenApi;
 import com.quicklink.javalinfly.processor.JavalinFlyConfig;
 import com.quicklink.javalinfly.processor.Round;
+import com.quicklink.javalinfly.processor.utils.JsonUtils;
 import com.quicklink.javalinfly.processor.utils.ProcessorUtil;
 import io.javalin.Javalin;
 import java.io.IOException;
@@ -79,7 +80,7 @@ public class GeneratorRound extends Round {
               String.join("", controllersRound.openApiStatements) +
               "            OpenApi openApi = openApiTranslator.build();\n" +
               "            config.openapi.edit(openApi);\n" +
-              "            String openApiSpec = openApiTranslator.asString(openApi);\n" +
+              "            String openApiSpec = %s.get().serialize(openApi);\n".formatted(JsonUtils.class.getName()) +
 //              "            Vars.openApiSpec(openApiSpec);\n" +
               "            Vars.swaggerUi(SwaggerUIHtmlGenerator.generateSwaggerUIHtml(openApiSpec));\n"
               +
@@ -96,7 +97,7 @@ public class GeneratorRound extends Round {
       try {
         FileObject file = filer.createResource(StandardLocation.CLASS_OUTPUT, "", Vars.RESOURCE_FILE_SPEC);
         try (Writer writer = file.openWriter()) {
-          writer.write(controllersRound.schemasEncoded);
+          writer.write(controllersRound.schemasEncoded == null ? "{}" : controllersRound.schemasEncoded);
         }
       } catch (IOException e) {
         messager.error(element, "Error generating resource %s: %s", Vars.RESOURCE_FILE_SPEC , e.getMessage());
