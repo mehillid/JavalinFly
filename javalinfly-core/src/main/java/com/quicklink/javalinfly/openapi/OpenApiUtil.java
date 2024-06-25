@@ -35,12 +35,14 @@ public class OpenApiUtil {
     this.messager = messager;
   }
 
-  public Schema classToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path, boolean request, boolean createSchema, Set<TypeMirror> processedTypes) {
-    if (processedTypes.contains(typeMirror)) {
-      // Return a placeholder schema to avoid infinite recursion
-      return Schema.builder().type("object").description("Cyclic reference detected").build();
+  public Schema classToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path, boolean request, boolean createSchema) {
+    messager.warning("Analyzing schema '%s' of path '%s'", typeMirror.toString(), path);
+
+
+    if(ProcessorUtil.getClassNameWithoutAnnotations(typeMirror).startsWith("java.")) {
+      return Schema.builder().type("string").example("Class: " + typeMirror.toString()).build();
     }
-    processedTypes.add(typeMirror);
+
 
     ProcessorUtil.asTypeElement(this.typeUtils, typeMirror);
     if (typeMirror.getKind() == TypeKind.TYPEVAR) {
@@ -67,7 +69,7 @@ public class OpenApiUtil {
           keyType = this.getGenericType(declaredType, 0);
           if (keyType != null) {
             this.typeUtils.asElement(keyType);
-            schema.items = this.classToSchema(schemas, keyType, path, request, false, processedTypes);
+            schema.items = this.classToSchema(schemas, keyType, path, request, false);
           } else {
             schema.items = Schema.builder().type("object").description("Unknown type").build();
           }
@@ -83,7 +85,7 @@ public class OpenApiUtil {
           if (!ProcessorUtil.getClassNameWithoutAnnotations(keyType).equals("java.lang.String")) {
             throw new IllegalStateException("Invalid map at path " + path + ", key must be a String");
           } else {
-            schema.additionalProperties = this.classToSchema(schemas, valueType, path, request, false, processedTypes);
+            schema.additionalProperties = this.classToSchema(schemas, valueType, path, request, false);
             return schema;
           }
         } else {
@@ -111,7 +113,7 @@ public class OpenApiUtil {
             OpenApiProperty openApiProperty = variableElement.getAnnotation(OpenApiProperty.class);
             String exampleProperty = openApiProperty != null ? openApiProperty.defaultValue() : null;
             TypeMirror returnType = variableElement.asType();
-            Schema fieldSchema = this.typeMirrorToSchema(schemas, returnType, path, request, processedTypes);
+            Schema fieldSchema = this.typeMirrorToSchema(schemas, returnType, path, request);
             if (exampleProperty != null) {
               fieldSchema.example = exampleProperty;
             }
@@ -129,7 +131,7 @@ public class OpenApiUtil {
     }
   }
 
-  private Schema typeMirrorToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path, boolean request, Set<TypeMirror> processedTypes) {
+  private Schema typeMirrorToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path, boolean request) {
     switch (typeMirror.getKind()) {
       case BOOLEAN:
         return Schema.builder().type("boolean").build();
@@ -151,7 +153,7 @@ public class OpenApiUtil {
             return Schema.builder().type("string")._enum(this.getEnumValues((TypeElement) returnTypeElement)).build();
           }
 
-          return this.classToSchema(schemas, typeMirror, path, request, false, processedTypes);
+          return this.classToSchema(schemas, typeMirror, path, request, false);
         }
       default:
         this.messager.error("Unsupported field type %s of path %s", new Object[]{typeMirror.toString(), path});
