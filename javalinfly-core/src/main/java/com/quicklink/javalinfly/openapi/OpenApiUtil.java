@@ -3,6 +3,7 @@ package com.quicklink.javalinfly.openapi;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.quicklink.javalinfly.annotation.OpenApiProperty;
+import com.quicklink.javalinfly.annotation.Post;
 import com.quicklink.javalinfly.openapi.model.Schema;
 import com.quicklink.javalinfly.processor.utils.Messager;
 import com.quicklink.javalinfly.processor.utils.ProcessorUtil;
@@ -40,8 +41,6 @@ public class OpenApiUtil {
 //    if(ProcessorUtil.getClassNameWithoutAnnotations(typeMirror).startsWith("java.")) {
 //      return Schema.builder().type("string").example("Class: " + typeMirror.toString()).build();
 //    }
-    String typeName = ProcessorUtil.getClassNameWithoutAnnotations(typeMirror);
-
     // if is primitive or string
     if (isKnownType(typeMirror)) {
       return this.typeMirrorToSchema(schemas, typeMirror, path, request);
@@ -59,14 +58,6 @@ public class OpenApiUtil {
       TypeElement classElement = (TypeElement) declaredType.asElement();
       Schema schema = new Schema();
       String nameClass = classElement.getSimpleName().toString();
-
-      {
-        TypeMirror nameGenericType = this.getGenericType(declaredType, 0);
-        if(nameGenericType != null) {
-          nameClass += " " + ProcessorUtil.asTypeElement(typeUtils, nameGenericType).getSimpleName().toString();
-        }
-
-      }
 
       Messager.warning("\tclassElement '%s'", classElement);
       if (schemas.containsKey(nameClass)) {
@@ -87,10 +78,18 @@ public class OpenApiUtil {
 //        } else if (typeName.startsWith("java.util.Map") || typeName.startsWith("java.util.HashMap")
 //            || typeName.startsWith("java.util.LinkedHashMap")){
         } else if (isMap(typeMirror)){
+
+
           Messager.warning("\t\t** is map");
           schema.type = "object";
           keyType = this.getGenericType(declaredType, 0);
           TypeMirror valueType = this.getGenericType(declaredType, 1);
+
+          if(createSchema) {
+            schemas.remove(nameClass);
+            nameClass += " " + ProcessorUtil.getTypeSimpleName(typeUtils, keyType) + "," + ProcessorUtil.getTypeSimpleName(typeUtils, valueType);
+            schemas.put(nameClass, schema);
+          }
 
           assert keyType != null;
 
@@ -105,6 +104,14 @@ public class OpenApiUtil {
         } else if (this.isCollection(typeMirror)) {
           schema.type = "array";
           keyType = this.getGenericType(declaredType, 0);
+
+
+          if(createSchema) {
+            schemas.remove(nameClass);
+            nameClass += " " + ProcessorUtil.getTypeSimpleName(typeUtils, keyType);
+            schemas.put(nameClass, schema);
+          }
+
           if (keyType != null) {
             this.typeUtils.asElement(keyType);
             schema.items = this.classToSchema(schemas, keyType, path, request, false);

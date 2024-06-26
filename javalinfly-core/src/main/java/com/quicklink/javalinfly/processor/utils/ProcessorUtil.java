@@ -33,6 +33,10 @@ public final class ProcessorUtil {
     return name.substring(0, 1).toUpperCase(ENGLISH) + name.substring(1);
   }
 
+  public static String getTypeSimpleName(Types typeUtils, TypeMirror typeMirror) {
+    return asTypeElement(typeUtils,typeMirror).getSimpleName().toString();
+  }
+
   public static String notCapitalize(String name) {
     return name.substring(0, 1).toLowerCase(ENGLISH) + name.substring(1);
   }
