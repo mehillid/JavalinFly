@@ -22,7 +22,7 @@ Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
     <dependency>
         <groupId>com.github.qlsolutions.JavalinFly</groupId>
         <artifactId>javalinfly-core</artifactId>
-        <version>0.1.8b18</version>
+        <version>0.1.8b19</version>
     </dependency>       
    ```
 
@@ -37,7 +37,7 @@ Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
                 <annotationProcessorPath>
                     <groupId>com.github.qlsolutions.JavalinFly</groupId>
                     <artifactId>javalinfly-core</artifactId>
-                    <version>0.1.8b18</version>
+                    <version>0.1.8b19</version>
                 </annotationProcessorPath>
             </annotationProcessorPaths>
         </configuration>
@@ -51,7 +51,7 @@ Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
     <dependency>
         <groupId>com.github.qlsolutions.JavalinFly</groupId>
         <artifactId>javalinfly-kotlin</artifactId>
-        <version>0.1.8b18</version>
+        <version>0.1.8b19</version>
     </dependency>
     ```
 
@@ -69,20 +69,20 @@ Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
     - Dependency
 
     ```groovy
-    implementation 'com.github.qlsolutions.JavalinFly:javalinfly-core:0.1.8b18'
+    implementation 'com.github.qlsolutions.JavalinFly:javalinfly-core:0.1.8b19'
     ```
 
     - Annotation processor
 
     ```groovy
-    annotationProcessor 'com.github.qlsolutions.JavalinFly:javalinfly-core:0.1.8b18'
+    annotationProcessor 'com.github.qlsolutions.JavalinFly:javalinfly-core:0.1.8b19'
     ```
 
     - <details>
         <summary>Optionally also the kotlin module</summary>
       
         ```groovy
-        implementation 'com.github.qlsolutions.JavalinFly:javalinfly-kotlin:0.1.8b18'
+        implementation 'com.github.qlsolutions.JavalinFly:javalinfly-kotlin:0.1.8b19'
         ```
       
         </details>
@@ -93,19 +93,19 @@ Make sure you include the <a href="https://jitpack.io/">repository</a> as well.
 
     - Dependency
     ```groovy
-    implementation("com.github.qlsolutions.JavalinFly:javalinfly-core:0.1.8b18")
+    implementation("com.github.qlsolutions.JavalinFly:javalinfly-core:0.1.8b19")
     ```
 
     - Annotation processor
     ```groovy
-    annotationProcessor("com.github.qlsolutions.JavalinFly:javalinfly-core:0.1.8b18")
+    annotationProcessor("com.github.qlsolutions.JavalinFly:javalinfly-core:0.1.8b19")
     ```
 
     - <details>
         <summary>Optionally also the kotlin module</summary>
 
         ```groovy
-        implementation("com.github.qlsolutions.JavalinFly:javalinfly-kotlin:0.1.8b18")
+        implementation("com.github.qlsolutions.JavalinFly:javalinfly-kotlin:0.1.8b19")
         ```
 
         </details>

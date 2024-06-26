@@ -219,7 +219,7 @@ public class ControllersRound extends Round {
                   var schema = openApiUtil.classToSchema(schemaMap,
                       returnTypeOk, endpointPath.toString(), true, true);
 
-                  returnOkSchema = typeOk.getSimpleName().toString();
+                  returnOkSchema = ProcessorUtil.asSchemaName(returnTypeOk);
                 }
 
                 // err
@@ -228,7 +228,7 @@ public class ControllersRound extends Round {
                   var schema = openApiUtil.classToSchema(schemaMap,
                       returnTypeErr, endpointPath.toString(), true, true);
 
-                  returnErrSchema = typeErr.getSimpleName().toString();
+                  returnErrSchema = ProcessorUtil.asSchemaName(returnTypeErr);
                 }
               }
               break;
@@ -261,7 +261,7 @@ public class ControllersRound extends Round {
                   var schema = openApiUtil.classToSchema(schemaMap,
                       returnTypeErr, endpointPath.toString(), true, true);
 
-                  returnErrSchema = typeErr.getSimpleName().toString();
+                  returnErrSchema = ProcessorUtil.asSchemaName(returnTypeErr);
                 }
               }
           }
@@ -292,7 +292,7 @@ public class ControllersRound extends Round {
                   var schema = openApiUtil.classToSchema(schemaMap,
                       returnTypeErr, endpointPath.toString(), true, true);
 
-                  returnErrSchema = typeErr.getSimpleName().toString();
+                  returnErrSchema = ProcessorUtil.asSchemaName(returnTypeErr);
                 }
               }
 

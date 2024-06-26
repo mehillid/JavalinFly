@@ -29,6 +29,10 @@ public final class ProcessorUtil {
 //  public static String getPackageName(TypeElement classElement) {
 //    return ((PackageElement) classElement.getEnclosingElement()).getQualifiedName().toString();
 //  }
+
+  public static String asSchemaName(TypeMirror tm) {
+    return tm.toString().replaceAll("[a-zA-Z0-9]+\\.", "");
+  }
   public static String capitalize(String name) {
     return name.substring(0, 1).toUpperCase(ENGLISH) + name.substring(1);
   }

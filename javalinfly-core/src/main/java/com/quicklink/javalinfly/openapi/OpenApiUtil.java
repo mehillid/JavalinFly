@@ -60,7 +60,7 @@ public class OpenApiUtil {
       TypeElement classElement = (TypeElement) declaredType.asElement();
       Schema schema = new Schema();
 //      String nameClass = classElement.getSimpleName().toString();
-      String nameClass = typeMirror.toString().replaceAll("[a-zA-Z0-9]+\\.", "");
+      String nameClass = ProcessorUtil.asSchemaName(typeMirror);
       Messager.warning("Nameclass " + nameClass);
 
       Messager.warning("\tclassElement '%s'", classElement);
