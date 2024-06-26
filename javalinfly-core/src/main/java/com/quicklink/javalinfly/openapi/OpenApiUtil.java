@@ -4,13 +4,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.quicklink.javalinfly.annotation.OpenApiProperty;
 import com.quicklink.javalinfly.openapi.model.Schema;
-import com.quicklink.javalinfly.processor.round.MessagerRound;
+import com.quicklink.javalinfly.processor.utils.Messager;
 import com.quicklink.javalinfly.processor.utils.ProcessorUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
@@ -27,17 +26,15 @@ public class OpenApiUtil {
 
   private final Types typeUtils;
   private final Elements elementUtils;
-  private final MessagerRound messager;
 
-  public OpenApiUtil(Types typeUtils, Elements elementUtils, MessagerRound messager) {
+  public OpenApiUtil(Types typeUtils, Elements elementUtils) {
     this.typeUtils = typeUtils;
     this.elementUtils = elementUtils;
-    this.messager = messager;
   }
 
   public Schema classToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path,
       boolean request, boolean createSchema) {
-    messager.warning("Analyzing schema '%s' of path '%s'", typeMirror.toString(), path);
+    Messager.warning("Analyzing schema '%s' of path '%s'", typeMirror.toString(), path);
 
 //
 //    if(ProcessorUtil.getClassNameWithoutAnnotations(typeMirror).startsWith("java.")) {
@@ -56,14 +53,14 @@ public class OpenApiUtil {
     }
 
     if (!(typeMirror instanceof DeclaredType declaredType)) {
-      messager.error("Unsupported type: " + typeMirror);
+      Messager.error("Unsupported type: " + typeMirror);
       return null;
     } else {
       TypeElement classElement = (TypeElement) declaredType.asElement();
       Schema schema = new Schema();
       String nameClass = classElement.getSimpleName().toString();
 
-      messager.warning("\tclassElement '%s'", classElement);
+      Messager.warning("\tclassElement '%s'", classElement);
       if (schemas.containsKey(nameClass)) {
         return Schema.builder().$ref(Schema.schemaRef(nameClass)).build();
       } else {
@@ -80,7 +77,7 @@ public class OpenApiUtil {
 //        } else if (typeName.startsWith("java.util.Map") || typeName.startsWith("java.util.HashMap")
 //            || typeName.startsWith("java.util.LinkedHashMap")){
         } else if (isMap(typeMirror)){
-          messager.warning("\t\t** is map");
+          Messager.warning("\t\t** is map");
           schema.type = "object";
           keyType = this.getGenericType(declaredType, 0);
           TypeMirror valueType = this.getGenericType(declaredType, 1);
@@ -189,7 +186,7 @@ public class OpenApiUtil {
           return this.classToSchema(schemas, typeMirror, path, request, false);
         }
       default:
-        this.messager.error("Unsupported field type %s of path %s",
+        Messager.error("Unsupported field type %s of path %s",
             new Object[]{typeMirror.toString(), path});
 
         return null;

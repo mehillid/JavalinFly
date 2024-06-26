@@ -9,6 +9,7 @@ import com.quicklink.javalinfly.openapi.model.OpenApi;
 import com.quicklink.javalinfly.processor.JavalinFlyConfig;
 import com.quicklink.javalinfly.processor.Round;
 import com.quicklink.javalinfly.processor.utils.JsonUtils;
+import com.quicklink.javalinfly.processor.utils.Messager;
 import com.quicklink.javalinfly.processor.utils.ProcessorUtil;
 import io.javalin.Javalin;
 import java.io.IOException;
@@ -26,36 +27,34 @@ import javax.tools.StandardLocation;
 
 public class GeneratorRound extends Round {
 
+  public record Input(Filer filer, JavalinFlyInjectorRound injectorRound,
+                      ControllersRound controllersRound) {
+
+  }
+
   public static String SIMPLE_CLASS_NAME = "GeneratedClass";
   public static String PACKAGE_NAME = "com.quicklink.javalinfly.gen";
   public static String FULL_CLASS = PACKAGE_NAME + "." + SIMPLE_CLASS_NAME;
   public static String METHOD_NAME = "init";
 
-  private final Filer filer;
-  private final MessagerRound messager;
-  private final JavalinFlyInjectorRound javalinFlyInjectorRound;
-  private final ControllersRound controllersRound;
+  private final Input input;
 
-  public GeneratorRound(Filer filer, MessagerRound messager,
-      JavalinFlyInjectorRound javalinFlyInjectorRound, ControllersRound controllersRound) {
-    this.filer = filer;
-    this.messager = messager;
-    this.javalinFlyInjectorRound = javalinFlyInjectorRound;
-    this.controllersRound = controllersRound;
+  public GeneratorRound(Input input) {
+    this.input = input;
   }
 
   @Override
   protected void run() {
 //        String packageName = elementUtils.getPackageOf(annotatedElement).getQualifiedName().toString();
 
-    for (var entry : controllersRound.selectedRoles.entrySet()) {
-      if (!javalinFlyInjectorRound.injectorRoles.contains(entry.getKey())) {
-        messager.error(entry.getValue(), "Role '%s' is missing at @%s", entry.getKey(),
+    for (var entry : input.controllersRound().selectedRoles.entrySet()) {
+      if (!input.injectorRound().injectorRoles.contains(entry.getKey())) {
+        Messager.error(entry.getValue(), "Role '%s' is missing at @%s", entry.getKey(),
             JavalinFlyInjector.class.getSimpleName());
         return;
       }
     }
-    generateClass(javalinFlyInjectorRound.injectorElement);
+    generateClass(input.injectorRound().injectorElement);
 //            error(controllers.iterator().next(), "Error generating class %s: Testing stuff", FULL_CLASS);
 //            error(e, "errore: classe %s non ha l'annotazione niagara 4", e.getSimpleName().toString());
 
@@ -68,19 +67,20 @@ public class GeneratorRound extends Round {
 
   private void generateClass(Element element) {
     String openApiStatements = "\n";
-    if (javalinFlyInjectorRound.javalinFlyInjectorAnn.generateDocumentation()) {
-      String allRoles = String.join(",", javalinFlyInjectorRound.injectorRoles.stream()
+    if (input.injectorRound().javalinFlyInjectorAnn.generateDocumentation()) {
+      String allRoles = String.join(",", input.injectorRound().injectorRoles.stream()
           .map(roleName -> ProcessorUtil.getClassNameWithoutAnnotations(
-              javalinFlyInjectorRound.rolesTypeMirror) + "." + roleName)
+              input.injectorRound().rolesTypeMirror) + "." + roleName)
           .collect(Collectors.toSet()));
 
       openApiStatements =
           "        {\n" +
               "            OpenApiTranslator openApiTranslator = new OpenApiTranslator();\n" +
-              String.join("", controllersRound.openApiStatements) +
+              String.join("", input.controllersRound().openApiStatements) +
               "            OpenApi openApi = openApiTranslator.build();\n" +
               "            config.openapi.edit(openApi);\n" +
-              "            String openApiSpec = %s.get().serialize(openApi);\n".formatted(JsonUtils.class.getName()) +
+              "            String openApiSpec = %s.get().serialize(openApi);\n".formatted(
+                  JsonUtils.class.getName()) +
 //              "            Vars.openApiSpec(openApiSpec);\n" +
               "            Vars.swaggerUi(SwaggerUIHtmlGenerator.generateSwaggerUIHtml(openApiSpec));\n"
               +
@@ -91,16 +91,16 @@ public class GeneratorRound extends Round {
               "            }, new RouteRole[]{%s});\n".formatted(allRoles) +
               "        }\n";
 
-
-
-
       try {
-        FileObject file = filer.createResource(StandardLocation.CLASS_OUTPUT, "", Vars.RESOURCE_FILE_SPEC);
+        FileObject file = input.filer().createResource(StandardLocation.CLASS_OUTPUT, "",
+            Vars.RESOURCE_FILE_SPEC);
         try (Writer writer = file.openWriter()) {
-          writer.write(controllersRound.schemasEncoded == null ? "{}" : controllersRound.schemasEncoded);
+          writer.write(
+              input.controllersRound().schemasEncoded == null ? "{}" : input.controllersRound().schemasEncoded);
         }
       } catch (IOException e) {
-        messager.error(element, "Error generating resource %s: %s", Vars.RESOURCE_FILE_SPEC , e.getMessage());
+        Messager.error(element, "Error generating resource %s: %s", Vars.RESOURCE_FILE_SPEC,
+            e.getMessage());
 
       }
 
@@ -127,28 +127,26 @@ public class GeneratorRound extends Round {
 
         "public class " + SIMPLE_CLASS_NAME + " {\n" +
         "    public " + SIMPLE_CLASS_NAME + "(){}\n" +
-        String.join("", controllersRound.handlersField) +
+        String.join("", input.controllersRound().handlersField) +
         "    public void " + METHOD_NAME
         + "(Javalin javalin, Consumer<JavalinFlyConfig> configFun) {\n" +
         "        JavalinFlyConfig config = new JavalinFlyConfig();\n" +
         "        configFun.accept(config);\n" +
         openApiStatements +
-        String.join("", controllersRound.endpoints) +
+        String.join("", input.controllersRound().endpoints) +
         "    }\n" +
         "}\n";
 
     Javalin app;
 
-
-
     try {
-      JavaFileObject sourceFile = filer.createSourceFile(FULL_CLASS, element);
+      JavaFileObject sourceFile = input.filer().createSourceFile(FULL_CLASS, element);
       try (Writer writer = sourceFile.openWriter()) {
         writer.write(source);
       }
 
     } catch (IOException e) {
-      messager.error(element, "Error generating class %s: %s", FULL_CLASS, e.getMessage());
+      Messager.error(element, "Error generating class %s: %s", FULL_CLASS, e.getMessage());
     }
 
   }

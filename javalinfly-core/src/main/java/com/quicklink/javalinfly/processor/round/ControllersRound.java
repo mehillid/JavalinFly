@@ -1,9 +1,5 @@
 package com.quicklink.javalinfly.processor.round;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.quicklink.javalinfly.annotation.Body;
 import com.quicklink.javalinfly.annotation.Controller;
 import com.quicklink.javalinfly.annotation.Delete;
@@ -22,11 +18,11 @@ import com.quicklink.javalinfly.openapi.OpenApiUtil;
 import com.quicklink.javalinfly.openapi.model.Schema;
 import com.quicklink.javalinfly.processor.Round;
 import com.quicklink.javalinfly.processor.utils.JsonUtils;
+import com.quicklink.javalinfly.processor.utils.Messager;
 import com.quicklink.javalinfly.processor.utils.ProcessorUtil;
 import com.quicklink.javalinfly.processor.utils.StringUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -49,13 +45,12 @@ import org.jetbrains.annotations.Nullable;
 
 public class ControllersRound extends Round {
 
-  private final Types typeUtils;
-  private final Elements elementUtils;
+  public record Input(Types typeUtils, Elements elementUtils, Set<? extends Element> controllers) {
 
-  private final MessagerRound messager;
-  private final RoundEnvironment roundEnv;
-  public final TypeMirror rolesTypeMirror;
-  private final JavalinFlyInjector injector;
+  }
+
+  private final Input input;
+  public JavalinFlyInjectorRound injectorRound;
 
   public Map<String, ExecutableElement> selectedRoles = new HashMap<>();
 
@@ -67,39 +62,30 @@ public class ControllersRound extends Round {
 
   public String schemasEncoded;
 
-  public ControllersRound(Types typeUtils, Elements elementUtils, MessagerRound messager,
-      RoundEnvironment roundEnv,
-      TypeMirror rolesTypeMirror,
-      JavalinFlyInjector injector) {
-    this.typeUtils = typeUtils;
-    this.elementUtils = elementUtils;
-    this.messager = messager;
-    this.roundEnv = roundEnv;
-    this.rolesTypeMirror = rolesTypeMirror;
-    this.injector = injector;
+  public ControllersRound(Input input) {
+    this.input = input;
   }
-
 
 
   @Override
   protected void run() {
+    JavalinFlyInjector injector =  injectorRound.javalinFlyInjectorAnn;
+
+
     // ** open api
     Map<String, Schema> schemaMap = new HashMap<>();
 
     schemaMap.put("CustomType", Schema.builder().type("string").build());
     schemaMap.put("SuccessResponse", Schema.builder().type("object").build());
 
-    OpenApiUtil openApiUtil = new OpenApiUtil(typeUtils, elementUtils, messager);
-
-
-    Set<? extends Element> controllers = roundEnv.getElementsAnnotatedWith(Controller.class);
+    OpenApiUtil openApiUtil = new OpenApiUtil(input.typeUtils(), input.elementUtils());
 
     // Iterate over all @Controller annotated elements
-    for (Element elementController : controllers) {
+    for (Element elementController : input.controllers()) {
 
       // Check if a class has been annotated with @Controller
       if (elementController.getKind() != ElementKind.CLASS) {
-        messager.error(elementController, "Only classes can be annotated with @%s",
+        Messager.error(elementController, "Only classes can be annotated with @%s",
             Controller.class.getSimpleName());
         return;
       }
@@ -110,7 +96,7 @@ public class ControllersRound extends Round {
 
       String varDecl = registerConstructors(annotatedElement);
       if (varDecl == null) {
-        messager.error(annotatedElement, "Class %s missing an empty constructor",
+        Messager.error(annotatedElement, "Class %s missing an empty constructor",
             annotatedElement.getQualifiedName());
         return;
       }
@@ -168,10 +154,9 @@ public class ControllersRound extends Round {
           return;
         }
 
-        if(handlerRoles.length == 0 && injector.defaultRoles().length > 0) {
+        if (handlerRoles.length == 0 && injector.defaultRoles().length > 0) {
           handlerRoles = injector.defaultRoles();
         }
-
 
         String rolesStr = "";
         if (handlerRoles.length > 0) {
@@ -181,7 +166,8 @@ public class ControllersRound extends Round {
 
           rolesStr = ", new RouteRole[]{";
           rolesStr += String.join(",", Arrays.stream(handlerRoles)
-              .map(roleName -> ProcessorUtil.getClassNameWithoutAnnotations(rolesTypeMirror) + "." + roleName)
+              .map(roleName -> ProcessorUtil.getClassNameWithoutAnnotations(injectorRound.rolesTypeMirror) + "."
+                  + roleName)
               .collect(Collectors.toSet()));
           rolesStr += "}";
         }
@@ -201,30 +187,35 @@ public class ControllersRound extends Round {
         String returnOkSchema = null;
         String returnErrSchema = null;
 
-
         TypeMirror returnType = executableElement.getReturnType();
-        TypeElement returnTypeElement = ProcessorUtil.asTypeElement(typeUtils, returnType);
+        TypeElement returnTypeElement = ProcessorUtil.asTypeElement(input.typeUtils(), returnType);
 
-        if(returnTypeElement.getQualifiedName().toString().equals(Response.class.getName())) {
+        if (returnTypeElement.getQualifiedName().toString().equals(Response.class.getName())) {
           var returnTypeGeneric = ProcessorUtil.getGenericTypes(returnType);
           TypeMirror returnTypeOk = returnTypeGeneric.get(0);
           TypeMirror returnTypeErr = returnTypeGeneric.get(1);
 
           switch (handlerResponseType) {
             case JSON:
-              if(returnTypeOk.getKind() != TypeKind.DECLARED  || ProcessorUtil.getClassNameWithoutAnnotations(returnTypeOk).startsWith("java.lang.")) {
-                messager.error(executableElement, "Endpoint method must return a valid success object");
+              if (returnTypeOk.getKind() != TypeKind.DECLARED
+                  || ProcessorUtil.getClassNameWithoutAnnotations(returnTypeOk)
+                  .startsWith("java.lang.")) {
+                Messager.error(executableElement,
+                    "Endpoint method must return a valid success object");
                 return;
               }
-              if(returnTypeErr.getKind() != TypeKind.DECLARED || ProcessorUtil.getClassNameWithoutAnnotations(returnTypeErr).startsWith("java.lang.")) {
-                messager.error(executableElement, "Endpoint method must return a valid error object");
+              if (returnTypeErr.getKind() != TypeKind.DECLARED
+                  || ProcessorUtil.getClassNameWithoutAnnotations(returnTypeErr)
+                  .startsWith("java.lang.")) {
+                Messager.error(executableElement,
+                    "Endpoint method must return a valid error object");
                 return;
               }
 
-              if(injector.generateDocumentation()) {
+              if (injector.generateDocumentation()) {
                 // ok
                 {
-                  TypeElement typeOk = ProcessorUtil.asTypeElement(typeUtils, returnTypeOk);
+                  TypeElement typeOk = ProcessorUtil.asTypeElement(input.typeUtils(), returnTypeOk);
                   var schema = openApiUtil.classToSchema(schemaMap,
                       returnTypeOk, endpointPath.toString(), true, true);
 
@@ -233,36 +224,40 @@ public class ControllersRound extends Round {
 
                 // err
                 {
-                  TypeElement typeErr = ProcessorUtil.asTypeElement(typeUtils, returnTypeErr);
+                  TypeElement typeErr = ProcessorUtil.asTypeElement(input.typeUtils(), returnTypeErr);
                   var schema = openApiUtil.classToSchema(schemaMap,
                       returnTypeErr, endpointPath.toString(), true, true);
 
                   returnErrSchema = typeErr.getSimpleName().toString();
                 }
               }
-            break;
+              break;
             case HTML:
             case STRING:
-              if(!ProcessorUtil.getClassNameWithoutAnnotations(returnTypeOk).equals(String.class.getName()) || !ProcessorUtil.getClassNameWithoutAnnotations(returnTypeErr).equals(String.class.getName())) {
-                messager.error(executableElement, "Endpoint method must return a Response<String, String>");
+              if (!ProcessorUtil.getClassNameWithoutAnnotations(returnTypeOk)
+                  .equals(String.class.getName()) || !ProcessorUtil.getClassNameWithoutAnnotations(
+                  returnTypeErr).equals(String.class.getName())) {
+                Messager.error(executableElement,
+                    "Endpoint method must return a Response<String, String>");
                 return;
               }
               break;
             case FILE:
-              if(returnTypeOk.getKind() != TypeKind.DECLARED  || !ProcessorUtil.getClassNameWithoutAnnotations(returnTypeOk).equals(
+              if (returnTypeOk.getKind() != TypeKind.DECLARED
+                  || !ProcessorUtil.getClassNameWithoutAnnotations(returnTypeOk).equals(
                   FileResponse.class.getName())) {
-                messager.error(executableElement, "Endpoint response must return a FileResponse");
+                Messager.error(executableElement, "Endpoint response must return a FileResponse");
                 return;
               }
 
-              if(injector.generateDocumentation()) {
+              if (injector.generateDocumentation()) {
                 // ok
                 {
                   returnOkSchema = "@FileResponse";
                 }
                 // err
                 {
-                  TypeElement typeErr = ProcessorUtil.asTypeElement(typeUtils, returnTypeErr);
+                  TypeElement typeErr = ProcessorUtil.asTypeElement(input.typeUtils(), returnTypeErr);
                   var schema = openApiUtil.classToSchema(schemaMap,
                       returnTypeErr, endpointPath.toString(), true, true);
 
@@ -270,29 +265,30 @@ public class ControllersRound extends Round {
                 }
               }
           }
-        }
-        else if(returnTypeElement.getQualifiedName().toString().equals(SuccessResponse.class.getName())) {
+        } else if (returnTypeElement.getQualifiedName().toString()
+            .equals(SuccessResponse.class.getName())) {
           var returnTypeGeneric = ProcessorUtil.getGenericTypes(returnType);
           TypeMirror returnTypeErr = returnTypeGeneric.get(0);
 
           switch (handlerResponseType) {
             case JSON:
-              if (returnTypeErr.getKind() != TypeKind.DECLARED || ProcessorUtil.getClassNameWithoutAnnotations(returnTypeErr)
+              if (returnTypeErr.getKind() != TypeKind.DECLARED
+                  || ProcessorUtil.getClassNameWithoutAnnotations(returnTypeErr)
                   .startsWith("java.lang.")) {
-                messager.error(executableElement,
+                Messager.error(executableElement,
                     "Endpoint method must return a valid error object");
                 return;
               }
               // openapi
 
-              if(injector.generateDocumentation()) {
+              if (injector.generateDocumentation()) {
                 // ok
                 {
                   returnOkSchema = "SuccessResponse";
                 }
                 // err
                 {
-                  TypeElement typeErr = ProcessorUtil.asTypeElement(typeUtils, returnTypeErr);
+                  TypeElement typeErr = ProcessorUtil.asTypeElement(input.typeUtils(), returnTypeErr);
                   var schema = openApiUtil.classToSchema(schemaMap,
                       returnTypeErr, endpointPath.toString(), true, true);
 
@@ -300,22 +296,24 @@ public class ControllersRound extends Round {
                 }
               }
 
-            break;
+              break;
             case HTML:
             case STRING:
-              if (!ProcessorUtil.getClassNameWithoutAnnotations(returnTypeErr).equals(String.class.getName())) {
-                messager.error(executableElement,
+              if (!ProcessorUtil.getClassNameWithoutAnnotations(returnTypeErr)
+                  .equals(String.class.getName())) {
+                Messager.error(executableElement,
                     "Endpoint method must return a SuccessResponse<String>");
                 return;
               }
               break;
             case FILE:
-              messager.error(executableElement, "File response is not supported in SuccessResponse");
+              Messager.error(executableElement,
+                  "File response is not supported in SuccessResponse");
               return;
           }
-        }
-        else {
-          messager.error(executableElement, "Endpoint method must return a Response or SuccessResponse");
+        } else {
+          Messager.error(executableElement,
+              "Endpoint method must return a Response or SuccessResponse");
           return;
         }
 
@@ -323,12 +321,11 @@ public class ControllersRound extends Round {
 //            || !returnTypeElement.getQualifiedName().toString().equals(Response.class.getName())) {
 //        }
 
-
-
         for (VariableElement variableElement : executableElement.getParameters()) {
 
           String nameParameter = variableElement.getSimpleName().toString();
-          String typeParameter = ProcessorUtil.getClassNameWithoutAnnotations(variableElement.asType());
+          String typeParameter = ProcessorUtil.getClassNameWithoutAnnotations(
+              variableElement.asType());
           String classParameter = typeParameter.split("<")[0];
 
           Body body = variableElement.getAnnotation(Body.class);
@@ -338,27 +335,26 @@ public class ControllersRound extends Round {
 
             if (body.customType()) {
               if (!typeParameter.equals(String.class.getName())) {
-                messager.error(variableElement,
+                Messager.error(variableElement,
                     "Body parameter '%s' must be a String since is customType",
                     nameParameter);
                 return;
               }
               parametersDecl.add(String.format("String %s = ctx.body();\n", nameParameter));
 
-
-              if(injector.generateDocumentation()) {
+              if (injector.generateDocumentation()) {
                 // openapi
                 bodySchema = "CustomType";
               }
 
             } else {
-              if(typeParameter.equals("io.javalin.http.UploadedFile")) {
+              if (typeParameter.equals("io.javalin.http.UploadedFile")) {
                 parametersDecl.add(
-                    String.format("%s %s =com.quicklink.javalinfly.ContextExt.uploadedFile(ctx);\n", typeParameter,
+                    String.format("%s %s =com.quicklink.javalinfly.ContextExt.uploadedFile(ctx);\n",
+                        typeParameter,
                         nameParameter));
 
-
-                if(injector.generateDocumentation()) {
+                if (injector.generateDocumentation()) {
                   bodySchema = "$UploadedFile";
                 }
 
@@ -367,10 +363,9 @@ public class ControllersRound extends Round {
                     String.format("%s %s = (%s) ctx.bodyAsClass(%s.class);\n", typeParameter,
                         nameParameter, typeParameter, classParameter));
 
-
-                if(injector.generateDocumentation()) {
+                if (injector.generateDocumentation()) {
                   // openapi
-                  TypeElement typeBodyName = ProcessorUtil.asTypeElement(typeUtils,
+                  TypeElement typeBodyName = ProcessorUtil.asTypeElement(input.typeUtils(),
                       variableElement.asType());
                   Schema schema = openApiUtil.classToSchema(schemaMap,
                       variableElement.asType(),
@@ -389,7 +384,8 @@ public class ControllersRound extends Round {
           Path path = variableElement.getAnnotation(Path.class);
           if (path != null) {
             if (!typeParameter.equals(String.class.getName())) {
-              messager.error(variableElement, "Path parameter '%s' must be a String", nameParameter);
+              Messager.error(variableElement, "Path parameter '%s' must be a String",
+                  nameParameter);
               return;
             }
 
@@ -405,7 +401,8 @@ public class ControllersRound extends Round {
           Query query = variableElement.getAnnotation(Query.class);
           if (query != null) {
             if (!typeParameter.equals(String.class.getName())) {
-              messager.error(variableElement, "Query parameter '%s' must be a String", nameParameter);
+              Messager.error(variableElement, "Query parameter '%s' must be a String",
+                  nameParameter);
               return;
             }
 
@@ -416,16 +413,14 @@ public class ControllersRound extends Round {
 
             queryParameters.add("\"" + nameParameter + "\"");
 
-
             NotNull notNull = variableElement.getAnnotation(NotNull.class);
-            if(notNull != null) {
-              parametersDecl.add(String.format("if(%s == null) throw new %s(\"%s\");\n", nameParameter,
-                  QueryParamNotFoundException.class.getName(), nameParameter));
+            if (notNull != null) {
+              parametersDecl.add(
+                  String.format("if(%s == null) throw new %s(\"%s\");\n", nameParameter,
+                      QueryParamNotFoundException.class.getName(), nameParameter));
             }
           }
         }
-
-
 
         endpoints.add(
             "javalin.addHandler(HandlerType." + handlerType + ",config.pathPrefix + \""
@@ -437,8 +432,7 @@ public class ControllersRound extends Round {
                 "\n} " + rolesStr + ");\n"
         );
 
-
-        if(injector.generateDocumentation()) {
+        if (injector.generateDocumentation()) {
           openApiStatements.add(
               String.format(
                   "            openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %s, %s, %s, %s, %s, %s, ResponseType.%s);\n",
@@ -460,13 +454,13 @@ public class ControllersRound extends Round {
       }
     }
 
-
     schemasEncoded = "{\"test\": 0}";
-    if(injector.generateDocumentation()) {
+    if (injector.generateDocumentation()) {
 
       schemasEncoded = JsonUtils.get().serialize(schemaMap);
 //        openApiStatements.add(0, "            openApiTranslator.decodeSchemas(\"" + schemasEncoded + "\");\n");
-      openApiStatements.add(0, "            openApiTranslator.decodeSchemas(Vars.openApiSpec());\n");
+      openApiStatements.add(0,
+          "            openApiTranslator.decodeSchemas(Vars.openApiSpec());\n");
     }
   }
 
