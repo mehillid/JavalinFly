@@ -60,6 +60,14 @@ public class OpenApiUtil {
       Schema schema = new Schema();
       String nameClass = classElement.getSimpleName().toString();
 
+      {
+        TypeMirror nameGenericType = this.getGenericType(declaredType, 0);
+        if(nameGenericType != null) {
+          nameClass += " " + ProcessorUtil.asTypeElement(typeUtils, nameGenericType).getSimpleName().toString();
+        }
+
+      }
+
       Messager.warning("\tclassElement '%s'", classElement);
       if (schemas.containsKey(nameClass)) {
         return Schema.builder().$ref(Schema.schemaRef(nameClass)).build();
@@ -71,6 +79,8 @@ public class OpenApiUtil {
         schema.description = "A JSON object containing a generic class information";
         TypeMirror keyType;
         if (this.isObject(classElement)) {
+
+
           schema.type = "object";
           schema.description = "Unknown type";
           return schema;
@@ -187,7 +197,7 @@ public class OpenApiUtil {
         }
       default:
         Messager.error("Unsupported field type %s of path %s",
-            new Object[]{typeMirror.toString(), path});
+            typeMirror.toString(), path);
 
         return null;
     }
