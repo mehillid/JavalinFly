@@ -140,6 +140,7 @@ public class OpenApiUtil {
             if (jsonIgnore != null) {
               continue;
             }
+            Messager.warning("Variable " + variableElement.getSimpleName().toString());
 
             JsonProperty jsonProperty = variableElement.getAnnotation(JsonProperty.class);
             if (jsonProperty != null && (
@@ -176,6 +177,7 @@ public class OpenApiUtil {
 
   private Schema typeMirrorToSchema(Map<String, Schema> schemas, TypeMirror typeMirror, String path,
       boolean request) {
+    Messager.warning("typeMirrorToSchema '%s' to '%s'", typeMirror.toString(), path);
     switch (typeMirror.getKind()) {
       case BOOLEAN:
         return Schema.builder().type("boolean").build();
@@ -187,23 +189,29 @@ public class OpenApiUtil {
         return Schema.builder().type("number").build();
       case DECLARED:
         String typeName = ProcessorUtil.getClassNameWithoutAnnotations(typeMirror);
-        if (typeName.equals("java.lang.String")) {
-          return Schema.builder().type("string").build();
-        } else if (typeName.equals("java.util.UUID")) {
-          return Schema.builder().type("string").format("uuid").build();
-        } else if (typeName.equals("java.lang.Integer") || typeName.equals("java.lang.Long")) {
-          return Schema.builder().type("integer").build();
-        } else if (typeName.equals("java.lang.Float") || typeName.equals("java.lang.Double")) {
-          return Schema.builder().type("number").build();
-        } else {
-          Element returnTypeElement = this.typeUtils.asElement(typeMirror);
-          if (returnTypeElement instanceof TypeElement && this.isEnum(
-              (TypeElement) returnTypeElement)) {
-            return Schema.builder().type("string")
-                ._enum(this.getEnumValues((TypeElement) returnTypeElement)).build();
+        switch (typeName) {
+          case "java.lang.String" -> {
+            return Schema.builder().type("string").build();
           }
+          case "java.util.UUID" -> {
+            return Schema.builder().type("string").format("uuid").build();
+          }
+          case "java.lang.Integer", "java.lang.Long" -> {
+            return Schema.builder().type("integer").build();
+          }
+          case "java.lang.Float", "java.lang.Double" -> {
+            return Schema.builder().type("number").build();
+          }
+          default -> {
+            Element returnTypeElement = this.typeUtils.asElement(typeMirror);
+            if (returnTypeElement instanceof TypeElement && this.isEnum(
+                (TypeElement) returnTypeElement)) {
+              return Schema.builder().type("string")
+                  ._enum(this.getEnumValues((TypeElement) returnTypeElement)).build();
+            }
 
-          return this.classToSchema(schemas, typeMirror, path, request, false);
+            return this.classToSchema(schemas, typeMirror, path, request, false);
+          }
         }
       default:
         Messager.error("Unsupported field type %s of path %s",
