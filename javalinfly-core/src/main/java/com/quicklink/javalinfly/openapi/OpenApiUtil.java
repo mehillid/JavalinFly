@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
@@ -136,10 +137,16 @@ public class OpenApiUtil {
             }
 
             VariableElement variableElement = (VariableElement) member;
+
+            if(variableElement.getModifiers().contains(Modifier.STATIC)) {
+              continue;
+            }
+
             JsonIgnore jsonIgnore = variableElement.getAnnotation(JsonIgnore.class);
             if (jsonIgnore != null) {
               continue;
             }
+
             Messager.warning("Variable " + variableElement.getSimpleName().toString());
 
             JsonProperty jsonProperty = variableElement.getAnnotation(JsonProperty.class);
