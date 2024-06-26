@@ -8,6 +8,7 @@ import com.quicklink.javalinfly.openapi.model.Schema;
 import com.quicklink.javalinfly.processor.utils.Messager;
 import com.quicklink.javalinfly.processor.utils.ProcessorUtil;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +58,9 @@ public class OpenApiUtil {
     } else {
       TypeElement classElement = (TypeElement) declaredType.asElement();
       Schema schema = new Schema();
-      String nameClass = classElement.getSimpleName().toString();
+//      String nameClass = classElement.getSimpleName().toString();
+      String nameClass = typeMirror.toString().replaceAll("[a-zA-Z]+\\.", "");
+      Messager.warning("Nameclass " + nameClass);
 
       Messager.warning("\tclassElement '%s'", classElement);
       if (schemas.containsKey(nameClass)) {
@@ -85,11 +88,11 @@ public class OpenApiUtil {
           keyType = this.getGenericType(declaredType, 0);
           TypeMirror valueType = this.getGenericType(declaredType, 1);
 
-          if(createSchema) {
-            schemas.remove(nameClass);
-            nameClass += " " + ProcessorUtil.getTypeSimpleName(typeUtils, keyType) + "," + ProcessorUtil.getTypeSimpleName(typeUtils, valueType);
-            schemas.put(nameClass, schema);
-          }
+//          if(createSchema) {
+//            schemas.remove(nameClass);
+//            nameClass += " " + ProcessorUtil.getTypeSimpleName(typeUtils, keyType) + "," + ProcessorUtil.getTypeSimpleName(typeUtils, valueType);
+//            schemas.put(nameClass, schema);
+//          }
 
           assert keyType != null;
 
@@ -106,11 +109,11 @@ public class OpenApiUtil {
           keyType = this.getGenericType(declaredType, 0);
 
 
-          if(createSchema) {
-            schemas.remove(nameClass);
-            nameClass += " " + ProcessorUtil.getTypeSimpleName(typeUtils, keyType);
-            schemas.put(nameClass, schema);
-          }
+//          if(createSchema) {
+//            schemas.remove(nameClass);
+//            nameClass += " " + ProcessorUtil.getTypeSimpleName(typeUtils, keyType);
+//            schemas.put(nameClass, schema);
+//          }
 
           if (keyType != null) {
             this.typeUtils.asElement(keyType);
