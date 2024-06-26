@@ -27,7 +27,9 @@ import org.jetbrains.annotations.NotNull;
     }
 
 
+    public void userTest () {
 
+    }
     @Get(tags = "user")
     public Response<User, StandardError> getUser(Context ctx, @Path String id, @Query @NotNull String age) {
         return Response.ok(new User("denis", 2));

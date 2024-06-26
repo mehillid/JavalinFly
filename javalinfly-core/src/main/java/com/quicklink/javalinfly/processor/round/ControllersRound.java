@@ -151,7 +151,7 @@ public class ControllersRound extends Round {
           summary = delete.summary();
           handlerTags = delete.tags();
         } else {
-          return;
+          continue;
         }
 
         if (handlerRoles.length == 0 && injector.defaultRoles().length > 0) {
