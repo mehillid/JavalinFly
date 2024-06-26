@@ -461,6 +461,7 @@ public class ControllersRound extends Round {
     }
 
 
+    schemasEncoded = "{\"test\": 0}";
     if(injector.generateDocumentation()) {
 
       schemasEncoded = JsonUtils.get().serialize(schemaMap);
