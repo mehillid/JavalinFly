@@ -22,7 +22,7 @@ public class JsonUtils {
 
   public JsonUtils() {
     MAPPER.setSerializationInclusion(Include.NON_NULL);
-    MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
+//    MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
   }
 
   public String serialize(Object value) {

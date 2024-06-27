@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.github.unldenis</groupId>
     <artifactId>JavalinFly</artifactId>
-    <version>0.1.8rc13</version>
+    <version>0.1.8rc14</version>
   </parent>
 
   <artifactId>javalinfly-example-kotlin</artifactId>
