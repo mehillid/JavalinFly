@@ -11,7 +11,7 @@ import java.io.UncheckedIOException;
 
 public class SwaggerUIHtmlGenerator {
 
-    private static String readResourceFile(String fileName) {
+    public static String readResourceFile(String fileName) {
         InputStream inputStream = JavalinFly.class.getClassLoader().getResourceAsStream(fileName);
         if (inputStream == null) {
             throw new IllegalArgumentException("File not found: " + fileName);

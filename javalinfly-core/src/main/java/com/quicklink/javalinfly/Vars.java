@@ -1,5 +1,6 @@
 package com.quicklink.javalinfly;
 
+import com.quicklink.javalinfly.openapi.SwaggerUIHtmlGenerator;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -35,15 +36,7 @@ public class Vars {
 
 
   public static String openApiSpec() {
-    try (InputStream inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream("/" + RESOURCE_FILE_SPEC)) {
-      if (inputStream == null) {
-        throw new FileNotFoundException("Resource file not found: " + RESOURCE_FILE_SPEC);
-      }
-
-      return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
+    return SwaggerUIHtmlGenerator.readResourceFile(RESOURCE_FILE_SPEC);
   }
 
 
