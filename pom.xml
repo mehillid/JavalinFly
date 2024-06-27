@@ -6,7 +6,7 @@
 
   <groupId>com.github.unldenis</groupId>
   <artifactId>JavalinFly</artifactId>
-  <version>0.1.8rc6</version>
+  <version>0.1.8rc7</version>
   <packaging>pom</packaging>
 
   <modules>

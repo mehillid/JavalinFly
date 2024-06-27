@@ -7,7 +7,7 @@ public class Vars {
 
 
   public static String openApiSpec() {
-    return SwaggerUIHtmlGenerator.readResourceFile("/" + RESOURCE_FILE_SPEC);
+    return SwaggerUIHtmlGenerator.readResourceFile(RESOURCE_FILE_SPEC);
   }
 
   private static String SWAGGER_UI = null;

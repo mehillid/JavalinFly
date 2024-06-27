@@ -1,31 +1,25 @@
 package com.quicklink.javalinfly.openapi;
 
 
+import com.goterl.resourceloader.FileLoader;
 import com.quicklink.javalinfly.JavalinFly;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
 
 public class SwaggerUIHtmlGenerator {
 
     public static String readResourceFile(String fileName) {
-        InputStream inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream(fileName);
-        if (inputStream == null) {
-            throw new IllegalArgumentException("File not found: " + fileName);
-        }
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-            StringBuilder content = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                content.append(line).append("\n");
-            }
-            return content.toString();
-        } catch (IOException e) {
-          throw new UncheckedIOException(e);
-        }
+      try {
+        var file = FileLoader.get().load(fileName, JavalinFly.class);
+        return Files.readString(file.toPath());
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
+      } catch (URISyntaxException e) {
+        throw new RuntimeException(e);
+      }
     }
 
     public static String generateSwaggerUIHtml(String openApiJson) {
