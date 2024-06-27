@@ -35,7 +35,7 @@ public class Vars {
 
 
   public static String openApiSpec() {
-    try (InputStream inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream(RESOURCE_FILE_SPEC)) {
+    try (InputStream inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream("/" + RESOURCE_FILE_SPEC)) {
       if (inputStream == null) {
         throw new FileNotFoundException("Resource file not found: " + RESOURCE_FILE_SPEC);
       }
