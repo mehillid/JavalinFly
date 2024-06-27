@@ -4,6 +4,7 @@ package com.quicklink.javalinfly.openapi;
 import com.goterl.resourceloader.FileLoader;
 import com.quicklink.javalinfly.JavalinFly;
 
+import com.quicklink.javalinfly.processor.utils.ResourceUtil;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URISyntaxException;
@@ -11,21 +12,14 @@ import java.nio.file.Files;
 
 public class SwaggerUIHtmlGenerator {
 
-    public static String readResourceFile(String fileName) {
-      try {
-        var file = FileLoader.get().load(fileName, JavalinFly.class);
-        return Files.readString(file.toPath());
-      } catch (IOException e) {
-        throw new UncheckedIOException(e);
-      } catch (URISyntaxException e) {
-        throw new RuntimeException(e);
-      }
-    }
+
 
     public static String generateSwaggerUIHtml(String openApiJson) {
-        String swaggerUiCss = readResourceFile("swagger-ui.css");
-        String swaggerUiBundleJs = readResourceFile("swagger-ui-bundle.js");
-        String swaggerUiStandalonePresetJs = readResourceFile("swagger-ui-standalone-preset.js");
+        String swaggerUiCss = ResourceUtil.readResourceFile("swagger-ui.css");
+        String swaggerUiBundleJs =  ResourceUtil.readResourceFile(
+            "swagger-ui-bundle.js");
+        String swaggerUiStandalonePresetJs =  ResourceUtil.readResourceFile(
+            "swagger-ui-standalone-preset.js");
 
         StringBuilder swaggerUiTemplate = new StringBuilder()
                 .append("<!DOCTYPE html>\n")

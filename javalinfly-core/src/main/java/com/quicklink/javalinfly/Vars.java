@@ -1,13 +1,15 @@
 package com.quicklink.javalinfly;
 
 import com.quicklink.javalinfly.openapi.SwaggerUIHtmlGenerator;
+import com.quicklink.javalinfly.processor.utils.ResourceUtil;
+
 public class Vars {
 
   public static final String RESOURCE_FILE_SPEC = "openapiSpec.json";
 
 
   public static String openApiSpec() {
-    return SwaggerUIHtmlGenerator.readResourceFile(RESOURCE_FILE_SPEC);
+    return ResourceUtil.readResourceFile(RESOURCE_FILE_SPEC);
   }
 
   private static String SWAGGER_UI = null;
