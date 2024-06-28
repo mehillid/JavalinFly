@@ -4,9 +4,9 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.github.unldenis</groupId>
+  <groupId>com.quicklink</groupId>
   <artifactId>JavalinFly</artifactId>
-  <version>0.1.8rc15</version>
+  <version>0.1.8rc16</version>
   <packaging>pom</packaging>
 
   <modules>
