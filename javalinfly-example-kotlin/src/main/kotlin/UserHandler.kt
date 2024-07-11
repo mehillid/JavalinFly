@@ -23,20 +23,20 @@ class UserHandler {
 
     }
     @Get(tags = ["user"])
-    fun getAll(ctx: Context) = response<List<User>, StandardError> {
+    fun getAll(ctx: Context) = response<List<User<*>>, StandardError> {
         ok = emptyList()
 
     }
 
     @Put
-    fun putUser(ctx : Context, @Query userId : String, @Body user : User) = response<User, StandardError> {
+    fun putUser(ctx : Context, @Query userId : String, @Body user : User<*>) = response<User<*>, StandardError> {
         ok = user
     }
     class Users {
-        var users: LinkedHashMap<String, User>? = null
+        var users: LinkedHashMap<String, User<*>>? = null
     }
 
-    class User {
+    class User<T> {
         lateinit var name: String
         var age: Int = 0
 

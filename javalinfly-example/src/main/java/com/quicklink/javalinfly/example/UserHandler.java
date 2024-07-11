@@ -31,21 +31,21 @@ import org.jetbrains.annotations.NotNull;
 
     }
     @Get(tags = "user")
-    public Response<User, StandardError> getUser(Context ctx, @Path String id, @Query @NotNull String age) {
-        return Response.ok(new User("denis", 2));
+    public Response<List<User<?>>, StandardError> getUser(Context ctx, @Path String id, @Query @NotNull String age) {
+        return Response.ok(List.of(new User<>("denis", 2)));
     }
 
     public static class Users {
-        public List<User> users;
+        public List<User<?>> users;
 
 
         public Users() {}
-        public Users(List<User> users) {
+        public Users(List<User<?>> users) {
             this.users = users;
         }
     }
 
-    public static class User {
+    public static class User<T> {
 
         public @NotNull String name;
         public int age;

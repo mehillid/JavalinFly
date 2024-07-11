@@ -110,6 +110,9 @@ public class OpenApiUtil {
           keyType = this.getGenericType(declaredType, 0);
 
 
+          Messager.warning("keyType = " + keyType);
+          Messager.warning("keyType 2 = '%s'", ProcessorUtil.getGenericTypes(declaredType));
+
 //          if(createSchema) {
 //            schemas.remove(nameClass);
 //            nameClass += " " + ProcessorUtil.getTypeSimpleName(typeUtils, keyType);
