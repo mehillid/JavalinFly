@@ -217,9 +217,9 @@ public class OpenApiTranslator {
             "App built with JavalinFly",
             "0.1",
             new Contact(
-                "Denis",
-                "https://github.com/unldenis",
-                "user@domain.com"
+                "QuickLink Solutions",
+                "https://www.qlsol.com/",
+                "info@qlsol.com"
             ))
         )
         .servers(Collections.emptyList())
