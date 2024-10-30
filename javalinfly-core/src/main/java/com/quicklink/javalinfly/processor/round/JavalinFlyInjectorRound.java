@@ -83,6 +83,10 @@ public class JavalinFlyInjectorRound extends Round {
 
       javalinFlyInjectorAnn = annotatedElement.getAnnotation(JavalinFlyInjector.class);
 
+      if(javalinFlyInjectorAnn.logs()) {
+        Messager.enable();
+      }
+
     }
   }
 

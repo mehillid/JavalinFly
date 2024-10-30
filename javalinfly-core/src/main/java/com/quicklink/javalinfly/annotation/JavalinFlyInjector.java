@@ -1,8 +1,5 @@
 package com.quicklink.javalinfly.annotation;
 
-
-
-import io.javalin.security.RouteRole;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -17,6 +14,7 @@ public @interface JavalinFlyInjector {
 
   boolean generateDocumentation() default true;
 
+  boolean logs() default false;
 
 
 //  Info info() default @Info();

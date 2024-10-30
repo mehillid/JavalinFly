@@ -16,8 +16,10 @@ public class Messager {
 
   private static File file;
 
-  public static void set(javax.annotation.processing.Messager messager) {
-    Messager.messager = messager;
+  private static boolean logs = false;
+
+  public static void enable() {
+    logs = true;
 
     file = new File("debug_compiler.txt");
     try {
@@ -29,6 +31,10 @@ public class Messager {
     }
   }
 
+  public static void set(javax.annotation.processing.Messager messager) {
+    Messager.messager = messager;
+  }
+
   private static void writeString(@NotNull String prefix, @Nullable Element e, @NotNull String msg, @NotNull Object... args) {
     try {
       Files.writeString(file.toPath(), String.format("%s (at %s) - %s", prefix, e, String.format(msg, args)), StandardOpenOption.APPEND);
@@ -38,6 +44,9 @@ public class Messager {
   }
 
   public static void error(@NotNull Element e, @NotNull String msg, @NotNull Object... args) {
+    if(!logs) {
+      return;
+    }
 
     writeString("ERROR", e, msg, args);
     messager.printMessage(Kind.ERROR, String.format(msg, args), e);
@@ -46,21 +55,37 @@ public class Messager {
   }
 
   public static void error(@NotNull String msg, @NotNull Object... args) {
+    if(!logs) {
+      return;
+    }
+
     writeString("WARNING", null, msg, args);
     messager.printMessage(Kind.ERROR, String.format(msg, args));
 
   }
 
   public static void print(@NotNull String msg, @NotNull Object... args) {
+    if(!logs) {
+      return;
+    }
+
     messager.printMessage(Kind.NOTE, String.format(msg, args));
   }
 
   public static void warning(@NotNull String msg, @NotNull Object... args) {
+    if(!logs) {
+      return;
+    }
+
     writeString("WARNING", null, msg, args);
     messager.printMessage(Kind.WARNING, String.format(msg, args));
   }
 
   public static void warning(@NotNull Element e, @NotNull String msg, @NotNull Object... args) {
+    if(!logs) {
+      return;
+    }
+
     messager.printMessage(Kind.WARNING, String.format(msg, args), e);
   }
 }
