@@ -19,5 +19,6 @@ public @interface Put {
 
   String[] tags() default {};
 
+  boolean deprecated() default false;
 
 }

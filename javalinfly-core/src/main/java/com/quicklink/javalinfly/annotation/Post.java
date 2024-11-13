@@ -19,4 +19,6 @@ public @interface Post {
 
   String[] tags() default {};
 
+  boolean deprecated() default false;
+
 }

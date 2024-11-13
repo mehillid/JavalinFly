@@ -14,7 +14,7 @@ public class Hello {
 
     public Hello() {}
 
-    @Get(responseType = ResponseType.STRING, roles = {"USER", "ADMIN"})
+    @Get(responseType = ResponseType.STRING, roles = {"USER", "ADMIN"}, deprecated = true)
     public SuccessResponse<String> main(Context ctx) {
         return SuccessResponse.ok();
     }

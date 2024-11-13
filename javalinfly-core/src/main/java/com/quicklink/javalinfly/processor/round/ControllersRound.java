@@ -122,6 +122,7 @@ public class ControllersRound extends Round {
         String summary;
         String[] handlerTags = null;
         ResponseType handlerResponseType = null;
+        boolean deprecated;
         if (get != null) {
           handlerType = "GET";
           handlerResponseType = get.responseType();
@@ -129,6 +130,7 @@ public class ControllersRound extends Round {
           handlerRoles = get.roles();
           summary = get.summary();
           handlerTags = get.tags();
+          deprecated = get.deprecated();
         } else if (post != null) {
           handlerType = "POST";
           handlerResponseType = post.responseType();
@@ -136,6 +138,7 @@ public class ControllersRound extends Round {
           handlerRoles = post.roles();
           summary = post.summary();
           handlerTags = post.tags();
+          deprecated = post.deprecated();
         } else if (put != null) {
           handlerType = "PUT";
           handlerResponseType = put.responseType();
@@ -143,6 +146,7 @@ public class ControllersRound extends Round {
           handlerRoles = put.roles();
           summary = put.summary();
           handlerTags = put.tags();
+          deprecated = put.deprecated();
         } else if (delete != null) {
           handlerType = "DELETE";
           handlerResponseType = delete.responseType();
@@ -150,6 +154,7 @@ public class ControllersRound extends Round {
           handlerRoles = delete.roles();
           summary = delete.summary();
           handlerTags = delete.tags();
+          deprecated = delete.deprecated();
         } else {
           continue;
         }
@@ -435,11 +440,12 @@ public class ControllersRound extends Round {
         if (injector.generateDocumentation()) {
           openApiStatements.add(
               String.format(
-                  "            openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %s, %s, %s, %s, %s, %s, ResponseType.%s);\n",
+                  "            openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %b, %s, %s, %s, %s, %s, %s, ResponseType.%s);\n",
                   endpointPath.toString(),
                   handlerType,
                   StringUtils.arrayToJavaCode(handlerRoles),
                   summary,
+                  deprecated,
                   pathParameters.isEmpty() ? "Collections.emptyList()"
                       : String.format("Arrays.asList(%s)", String.join(",", pathParameters)),
                   queryParameters.isEmpty() ? "Collections.emptyList()"

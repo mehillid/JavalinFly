@@ -11,7 +11,7 @@ import io.javalin.http.Context
 
 @Controller(path = "/hello")
 class Hello {
-    @Get(responseType = ResponseType.STRING, roles = ["USER", "ADMIN"])
+    @Get(responseType = ResponseType.STRING, roles = ["USER", "ADMIN"], deprecated = true)
     fun main(ctx: Context) = successResponse<String> {
 
         // this is success since there is no err

@@ -51,7 +51,7 @@ public class OpenApiTranslator {
     schemas = JsonUtils.get().deserialize(schemasEncoded, typeRef);
   }
 
-  public void addPath(String path, String method, String[] roles, String summary,
+  public void addPath(String path, String method, String[] roles, String summary, boolean deprecated,
       List<String> pathParameters, List<String> queryParameters, String[] pathTags,
       @Nullable String bodySchema, @Nullable String responseOkSchema,
       @Nullable String responseErrSchema, ResponseType responseType) {
@@ -73,6 +73,7 @@ public class OpenApiTranslator {
     // end description
 
     cachedPathMethod.summary = summary;
+    cachedPathMethod.deprecated = deprecated;
     cachedPathMethod.description = description;
     cachedPathMethod.responses = new LinkedHashMap<>();
     cachedPathMethod.tags = Arrays.stream(pathTags).collect(Collectors.toList());

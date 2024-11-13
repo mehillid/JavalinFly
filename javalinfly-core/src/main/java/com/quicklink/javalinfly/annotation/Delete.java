@@ -19,4 +19,6 @@ public @interface Delete {
 
   String[] tags() default {};
 
+  boolean deprecated() default false;
+
 }

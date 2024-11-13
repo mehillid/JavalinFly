@@ -14,6 +14,7 @@ public class Path {
   public static class PathMethod {
     public List<String> tags;
     public String summary;
+    public boolean deprecated;
     public String description;
     public RequestBody requestBody;
     public LinkedHashMap<String, Response> responses;

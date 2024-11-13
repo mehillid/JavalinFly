@@ -19,4 +19,6 @@ public @interface Get {
 
   String[] tags() default {};
 
+  boolean deprecated() default false;
+
 }
