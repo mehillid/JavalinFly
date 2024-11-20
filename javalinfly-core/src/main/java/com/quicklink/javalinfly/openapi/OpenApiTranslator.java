@@ -51,8 +51,8 @@ public class OpenApiTranslator {
     schemas = JsonUtils.get().deserialize(schemasEncoded, typeRef);
   }
 
-  public void addPath(String path, String method, String[] roles, String summary, boolean deprecated,
-      List<String> pathParameters, List<String> queryParameters, String[] pathTags,
+  public void addPath(String[] pathTags, String path, String method, String[] roles, String summary, boolean deprecated,
+      List<String> pathParameters, List<String> queryParameters,
       @Nullable String bodySchema, @Nullable String responseOkSchema,
       @Nullable String responseErrSchema, ResponseType responseType) {
 

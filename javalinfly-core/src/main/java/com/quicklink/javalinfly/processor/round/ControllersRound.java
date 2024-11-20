@@ -120,7 +120,6 @@ public class ControllersRound extends Round {
         String responseType = null;
         String[] handlerRoles;
         String summary;
-        String[] handlerTags = null;
         ResponseType handlerResponseType = null;
         boolean deprecated;
         if (get != null) {
@@ -129,7 +128,6 @@ public class ControllersRound extends Round {
           responseType = get.responseType().compiled();
           handlerRoles = get.roles();
           summary = get.summary();
-          handlerTags = get.tags();
           deprecated = get.deprecated();
         } else if (post != null) {
           handlerType = "POST";
@@ -137,7 +135,6 @@ public class ControllersRound extends Round {
           responseType = post.responseType().compiled();
           handlerRoles = post.roles();
           summary = post.summary();
-          handlerTags = post.tags();
           deprecated = post.deprecated();
         } else if (put != null) {
           handlerType = "PUT";
@@ -145,7 +142,6 @@ public class ControllersRound extends Round {
           responseType = put.responseType().compiled();
           handlerRoles = put.roles();
           summary = put.summary();
-          handlerTags = put.tags();
           deprecated = put.deprecated();
         } else if (delete != null) {
           handlerType = "DELETE";
@@ -153,7 +149,6 @@ public class ControllersRound extends Round {
           responseType = delete.responseType().compiled();
           handlerRoles = delete.roles();
           summary = delete.summary();
-          handlerTags = delete.tags();
           deprecated = delete.deprecated();
         } else {
           continue;
@@ -440,7 +435,8 @@ public class ControllersRound extends Round {
         if (injector.generateDocumentation()) {
           openApiStatements.add(
               String.format(
-                  "            openApiTranslator.addPath(\"%s\", \"%s\", %s, \"%s\", %b, %s, %s, %s, %s, %s, %s, ResponseType.%s);\n",
+                  "            openApiTranslator.addPath(%s, \"%s\", \"%s\", %s, \"%s\", %b, %s, %s, %s, %s, %s, ResponseType.%s);\n",
+                  StringUtils.arrayToJavaCode(controller.tags()),
                   endpointPath.toString(),
                   handlerType,
                   StringUtils.arrayToJavaCode(handlerRoles),
@@ -450,7 +446,6 @@ public class ControllersRound extends Round {
                       : String.format("Arrays.asList(%s)", String.join(",", pathParameters)),
                   queryParameters.isEmpty() ? "Collections.emptyList()"
                       : String.format("Arrays.asList(%s)", String.join(",", queryParameters)),
-                  StringUtils.arrayToJavaCode(handlerTags),
                   /*body*/ bodySchema == null ? null : "\"" + bodySchema + "\"",
                   /* ok */ returnOkSchema == null ? null : "\"" + returnOkSchema + "\"",
                   /* err */ returnErrSchema == null ? null : "\"" + returnErrSchema + "\"",

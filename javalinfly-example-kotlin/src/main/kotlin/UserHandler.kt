@@ -5,7 +5,7 @@ import com.quicklink.javalinfly.annotation.*
 import com.quicklink.javalinfly.kotlin.response
 import io.javalin.http.Context
 
-@Controller(path = "/user")
+@Controller(path = "/user", tags = ["User"])
 class UserHandler {
 
     @Post(tags = ["user"])

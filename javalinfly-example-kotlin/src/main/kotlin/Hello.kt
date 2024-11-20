@@ -9,7 +9,7 @@ import com.quicklink.javalinfly.kotlin.successResponse
 import com.quicklink.javalinfly.ResponseType
 import io.javalin.http.Context
 
-@Controller(path = "/hello")
+@Controller(path = "/hello", tags = ["Hello"])
 class Hello {
     @Get(responseType = ResponseType.STRING, roles = ["USER", "ADMIN"], deprecated = true)
     fun main(ctx: Context) = successResponse<String> {
